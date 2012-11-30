@@ -26,8 +26,17 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
+#ifndef VIGIR_CROP_DECIMATE_H__
+#define VIGIR_CROP_DECIMATE_H__
+
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/Image.h>
+
+//Forward declare cv stuff in header
+namespace cv{
+  class Mat;
+}
 
 namespace vigir_image_proc{
 
@@ -60,3 +69,6 @@ private:
 };
 
 }
+
+#endif
+
