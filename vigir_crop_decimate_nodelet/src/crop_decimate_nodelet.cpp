@@ -11,6 +11,8 @@
 
 #include <vigir_crop_decimate/crop_decimate.h>
 
+#include <vigir_perception_msgs/DownSampledImageRequest.h>
+
 namespace vigir_image_proc{
 
 class CropDecimateNodelet : public nodelet::Nodelet
@@ -19,12 +21,16 @@ class CropDecimateNodelet : public nodelet::Nodelet
   boost::shared_ptr<image_transport::ImageTransport> it_in_, it_out_;
   image_transport::CameraSubscriber sub_;
 
-  int queue_size_;
-
   boost::mutex connect_mutex_;
   image_transport::CameraPublisher pub_;
 
+  ros::Subscriber image_req_sub_;
+
+  int queue_size_;
+
   CropDecimate crop_decimate_;
+  vigir_image_proc::CropDecimate::CropDecimateConfig crop_decimate_config_;
+  bool crop_decimate_configured_;
 
   virtual void onInit();
 
@@ -32,6 +38,8 @@ class CropDecimateNodelet : public nodelet::Nodelet
 
   void imageCb(const sensor_msgs::ImageConstPtr& image_msg,
                const sensor_msgs::CameraInfoConstPtr& info_msg);
+
+  void imageRequestCb(const vigir_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
 };
 
 void CropDecimateNodelet::onInit()
@@ -52,6 +60,10 @@ void CropDecimateNodelet::onInit()
   // Make sure we don't enter connectCb() between advertising and assigning to pub_
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
   pub_ = it_out_->advertiseCamera("image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
+
+  image_req_sub_ = nh_out.subscribe("image_request",1, &CropDecimateNodelet::imageRequestCb, this);
+
+  crop_decimate_configured_ = false;
 }
 
 // Handles (un)subscribing when clients (un)subscribe
@@ -70,21 +82,37 @@ void CropDecimateNodelet::connectCb()
 void CropDecimateNodelet::imageCb(const sensor_msgs::ImageConstPtr& image_msg,
                                   const sensor_msgs::CameraInfoConstPtr& info_msg)
 {
-  vigir_image_proc::CropDecimate::CropDecimateConfig config;
+  if (!crop_decimate_configured_){
+    crop_decimate_config_.decimation_x = 2;
+    crop_decimate_config_.decimation_y = 2;
+    crop_decimate_config_.width = info_msg->width;
+    crop_decimate_config_.height = info_msg->height;
+    crop_decimate_config_.x_offset = 0;
+    crop_decimate_config_.y_offset = 0;
 
-  config.decimation_x = 1;
-  config.decimation_y = 1;
-  config.height = 100;
-  config.width =100;
-  config.x_offset = 100;
-  config.y_offset = 100;
+    crop_decimate_configured_ = true;
+  }
+
+
 
   sensor_msgs::ImagePtr image_out;
   sensor_msgs::CameraInfoPtr camera_info_out;
 
-  if (crop_decimate_.processImage(config, image_msg, info_msg, image_out, camera_info_out)){
+  if (crop_decimate_.processImage(crop_decimate_config_, image_msg, info_msg, image_out, camera_info_out)){
     pub_.publish(image_out, camera_info_out);
   }
+}
+
+void CropDecimateNodelet::imageRequestCb(const vigir_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
+{
+  crop_decimate_config_.decimation_x = image_request_msg->binning_x;
+  crop_decimate_config_.decimation_y = image_request_msg->binning_y;
+  crop_decimate_config_.width = image_request_msg->roi.width;
+  crop_decimate_config_.height = image_request_msg->roi.height;
+  crop_decimate_config_.x_offset = image_request_msg->roi.x_offset;
+  crop_decimate_config_.y_offset = image_request_msg->roi.y_offset;
+
+  crop_decimate_configured_ = true;
 }
 
 
