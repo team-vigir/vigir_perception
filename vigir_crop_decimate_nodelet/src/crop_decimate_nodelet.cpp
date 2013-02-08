@@ -44,6 +44,8 @@ class CropDecimateNodelet : public nodelet::Nodelet
 
 void CropDecimateNodelet::onInit()
 {
+  crop_decimate_configured_ = false;
+
   ros::NodeHandle& nh         = getNodeHandle();
   ros::NodeHandle& private_nh = getPrivateNodeHandle();
   ros::NodeHandle nh_in (nh, "camera");
@@ -63,7 +65,6 @@ void CropDecimateNodelet::onInit()
 
   image_req_sub_ = nh_out.subscribe("image_request",1, &CropDecimateNodelet::imageRequestCb, this);
 
-  crop_decimate_configured_ = false;
 }
 
 // Handles (un)subscribing when clients (un)subscribe
