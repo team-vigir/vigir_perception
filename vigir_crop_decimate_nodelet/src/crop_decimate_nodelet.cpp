@@ -141,7 +141,8 @@ namespace vigir_image_proc{
 
       ros::NodeHandle& nh = getNodeHandle();
 
-      image_publish_timer_ = nh.createTimer(ros::Duration(1.0/last_request_->publish_frequency), &CropDecimateNodelet::publishTimerCb, this);
+      if(last_request_->publish_frequency > 0.0f)
+        image_publish_timer_ = nh.createTimer(ros::Duration(1.0/last_request_->publish_frequency), &CropDecimateNodelet::publishTimerCb, this);
 
     }else{
       //free run/publish always on receive
@@ -165,8 +166,11 @@ namespace vigir_image_proc{
     sensor_msgs::ImagePtr image_out;
     sensor_msgs::CameraInfoPtr camera_info_out;
 
-    if (crop_decimate_.processImage(crop_decimate_config_, last_image_msg_, last_info_msg_, image_out, camera_info_out)){
-      pub_.publish(image_out, camera_info_out);
+    // Need to make sure we have the last image/info before we try to process it.
+    if(last_image_msg_ != NULL && last_info_msg_ != NULL) {
+      if (crop_decimate_.processImage(crop_decimate_config_, last_image_msg_, last_info_msg_, image_out, camera_info_out)){
+        pub_.publish(image_out, camera_info_out);
+      }
     }
   }
 
