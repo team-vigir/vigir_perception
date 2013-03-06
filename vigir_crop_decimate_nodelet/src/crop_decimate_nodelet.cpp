@@ -11,7 +11,7 @@
 
 #include <vigir_crop_decimate/crop_decimate.h>
 
-#include <vigir_perception_msgs/DownSampledImageRequest.h>
+#include <flor_perception_msgs/DownSampledImageRequest.h>
 
 namespace vigir_image_proc{
 
@@ -26,7 +26,7 @@ namespace vigir_image_proc{
     void imageCb(const sensor_msgs::ImageConstPtr& image_msg,
     const sensor_msgs::CameraInfoConstPtr& info_msg);
 
-    void imageRequestCb(const vigir_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
+    void imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
 
     void publishTimerCb(const ros::TimerEvent& event);
 
@@ -51,7 +51,7 @@ namespace vigir_image_proc{
 
     sensor_msgs::ImageConstPtr last_image_msg_;
     sensor_msgs::CameraInfoConstPtr last_info_msg_;
-    vigir_perception_msgs::DownSampledImageRequestConstPtr last_request_;
+    flor_perception_msgs::DownSampledImageRequestConstPtr last_request_;
 
     ros::Timer image_publish_timer_;
 
@@ -102,7 +102,7 @@ namespace vigir_image_proc{
     last_info_msg_ = info_msg;
 
     //Free run if we didn´ t get a request yet, or explicitly requested free run mode
-    if (!last_request_ || last_request_->mode == vigir_perception_msgs::DownSampledImageRequest::ALL){
+    if (!last_request_ || last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ALL){
 
       if (!crop_decimate_configured_){
         crop_decimate_config_.decimation_x = 2;
@@ -119,7 +119,7 @@ namespace vigir_image_proc{
     }
   }
 
-  void CropDecimateNodelet::imageRequestCb(const vigir_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
+  void CropDecimateNodelet::imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
   {
     last_request_ = image_request_msg;
 
@@ -132,11 +132,11 @@ namespace vigir_image_proc{
 
     crop_decimate_configured_ = true;
 
-    if (last_request_->mode == vigir_perception_msgs::DownSampledImageRequest::ONCE){
+    if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ONCE){
 
       this->publishCroppedImage();
 
-    }else if (last_request_->mode == vigir_perception_msgs::DownSampledImageRequest::PUBLISH_FREQ){
+    }else if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::PUBLISH_FREQ){
       this->publishCroppedImage();
 
       ros::NodeHandle& nh = getNodeHandle();
@@ -154,7 +154,7 @@ namespace vigir_image_proc{
   void CropDecimateNodelet::publishTimerCb(const ros::TimerEvent& event)
   {
     //Only actually do something if we're in PUBLISH_FREQ mode.
-    if (last_request_->mode != vigir_perception_msgs::DownSampledImageRequest::PUBLISH_FREQ){
+    if (last_request_->mode != flor_perception_msgs::DownSampledImageRequest::PUBLISH_FREQ){
       return;
     }
 
