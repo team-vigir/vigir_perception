@@ -101,20 +101,13 @@ namespace vigir_image_proc{
     last_image_msg_ = image_msg;
     last_info_msg_ = info_msg;
 
-    //Free run if we didn´ t get a request yet, or explicitly requested free run mode
-    if (!last_request_ || last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ALL){
+    // If we didn't get a request yet, do nothing
+    if (!last_request_){
+      return;
+    }
 
-      if (!crop_decimate_configured_){
-        crop_decimate_config_.decimation_x = 2;
-        crop_decimate_config_.decimation_y = 2;
-        crop_decimate_config_.width = info_msg->width;
-        crop_decimate_config_.height = info_msg->height;
-        crop_decimate_config_.x_offset = 0;
-        crop_decimate_config_.y_offset = 0;
-
-        crop_decimate_configured_ = true;
-      }
-
+    //Free run (direct republish) if in ALL mode
+    if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ALL){
       this->publishCroppedImage();
     }
   }
