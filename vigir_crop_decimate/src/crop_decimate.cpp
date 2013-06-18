@@ -62,19 +62,21 @@ bool CropDecimate::processImage(const CropDecimateConfig& config_in,
     config.height &= ~0x1;    
   }
 
-  if ((config.x_offset >= image_msg->width)  || (config.x_offset < 0) ||
-      (config.y_offset >= image_msg->height) || (config.y_offset < 0) ){
-    //Do nothing if we have invalid start coordinates
-    return false;
-  }
-
   int max_width = image_msg->width - config.x_offset;
   int max_height = image_msg->height - config.y_offset;
   int width = config.width;
   int height = config.height;
-  if (width == 0 || width > max_width)
+
+  //Do nothing if we have invalid start coordinates or zero size
+  if ((config.x_offset >= image_msg->width)  || (config.x_offset < 0) ||
+      (config.y_offset >= image_msg->height) || (config.y_offset < 0) ||
+      (width == 0) || (height == 0)){
+    return false;
+  }
+
+  if (width > max_width)
     width = max_width;
-  if (height == 0 || height > max_height)
+  if (height > max_height)
     height = max_height;
 
   // On no-op, just pass the messages along
