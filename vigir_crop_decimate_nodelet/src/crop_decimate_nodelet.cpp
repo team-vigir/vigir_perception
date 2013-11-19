@@ -44,7 +44,7 @@ namespace vigir_image_proc{
     ros::Subscriber image_req_sub_;
 
     int queue_size_;
-    bool disable_video_;
+    double max_video_framerate_;
 
     CropDecimate crop_decimate_;
     vigir_image_proc::CropDecimate::CropDecimateConfig crop_decimate_config_;
@@ -71,7 +71,7 @@ namespace vigir_image_proc{
 
     // Read parameters
     private_nh.param("queue_size", queue_size_, 5);
-    private_nh.param("disable_video", disable_video_, false);
+    private_nh.param("max_video_framerate", max_video_framerate_, 100.0);
 
     // Monitor whether anyone is subscribed to the output
     image_transport::SubscriberStatusCallback connect_cb = boost::bind(&CropDecimateNodelet::connectCb, this);
@@ -127,7 +127,7 @@ namespace vigir_image_proc{
 
     crop_decimate_configured_ = true;
 
-    if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ONCE || disable_video_){
+    if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ONCE){
 
       this->publishCroppedImage();
 
@@ -135,9 +135,11 @@ namespace vigir_image_proc{
       this->publishCroppedImage();
 
       ros::NodeHandle& nh = getNodeHandle();
+      
+      double capped_publish_frequency = std::min( max_video_framerate_,  (double)(last_request_->publish_frequency) );
 
-      if(last_request_->publish_frequency > 0.0f)
-        image_publish_timer_ = nh.createTimer(ros::Duration(1.0/last_request_->publish_frequency), &CropDecimateNodelet::publishTimerCb, this);
+      if(capped_publish_frequency > 0.0f)
+        image_publish_timer_ = nh.createTimer(ros::Duration(1.0/capped_publish_frequency), &CropDecimateNodelet::publishTimerCb, this);
 
     }else{
       //free run/publish always on receive
