@@ -30,3 +30,11 @@ rosbuild_add_library(${PROJECT_NAME} src/crop_decimate_nodelet.cpp)
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 rosbuild_add_executable(crop_decimate_node src/crop_decimate_node.cpp)
 target_link_libraries(crop_decimate_node ${PROJECT_NAME})
+
+#common commands for building c++ executables and libraries
+rosbuild_add_library(${PROJECT_NAME}_requester src/crop_decimate_requester_nodelet.cpp)
+#target_link_libraries(${PROJECT_NAME} another_library)
+#rosbuild_add_boost_directories()
+#rosbuild_link_boost(${PROJECT_NAME} thread)
+rosbuild_add_executable(crop_decimate_requester_node src/crop_decimate_requester_node.cpp)
+target_link_libraries(crop_decimate_requester_node ${PROJECT_NAME}_requester)

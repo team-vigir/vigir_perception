@@ -17,6 +17,7 @@
 
   <export>
     <nodelet plugin="${prefix}/plugin_descriptions/vigir_crop_decimate_nodelet.xml" />
+    <nodelet plugin="${prefix}/plugin_descriptions/vigir_crop_decimate_requester_nodelet.xml" />
   </export>
 
 </package>

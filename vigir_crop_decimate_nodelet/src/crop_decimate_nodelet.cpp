@@ -15,6 +15,7 @@
 
 namespace vigir_image_proc{
 
+
   class CropDecimateNodelet : public nodelet::Nodelet
   {
 
@@ -26,7 +27,7 @@ namespace vigir_image_proc{
     void imageCb(const sensor_msgs::ImageConstPtr& image_msg,
     const sensor_msgs::CameraInfoConstPtr& info_msg);
 
-    void imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
+    virtual void imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
 
     void publishTimerCb(const ros::TimerEvent& event);
 
@@ -57,6 +58,7 @@ namespace vigir_image_proc{
     ros::Timer image_publish_timer_;
 
   };
+
 
   void CropDecimateNodelet::onInit()
   {
@@ -116,6 +118,7 @@ namespace vigir_image_proc{
 
   void CropDecimateNodelet::imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
   {
+
     last_request_ = image_request_msg;
 
     crop_decimate_config_.decimation_x = image_request_msg->binning_x;
@@ -174,4 +177,6 @@ namespace vigir_image_proc{
 }
 
 PLUGINLIB_DECLARE_CLASS (vigir_crop_decimate_nodelet, CropDecimateNodelet, vigir_image_proc::CropDecimateNodelet, nodelet::Nodelet);
+
+
 
