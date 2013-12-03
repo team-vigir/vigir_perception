@@ -96,6 +96,7 @@ namespace vigir_image_proc{
     {
       image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
       sub_ = it_in_->subscribeCamera("image_raw", queue_size_, &CropDecimateNodelet::imageCb, this, hints);
+      ROS_INFO("subscribed to camera");
     }
   }
 
@@ -118,6 +119,8 @@ namespace vigir_image_proc{
 
   void CropDecimateNodelet::imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
   {
+
+    ROS_INFO("Image requested");
 
     last_request_ = image_request_msg;
 
