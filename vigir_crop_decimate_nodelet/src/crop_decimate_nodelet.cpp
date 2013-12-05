@@ -24,7 +24,7 @@ namespace vigir_image_proc{
 
     void connectCb();
 
-    void imageCb(const sensor_msgs::ImageConstPtr& image_msg,
+    virtual void imageCb(const sensor_msgs::ImageConstPtr& image_msg,
     const sensor_msgs::CameraInfoConstPtr& info_msg);
 
     virtual void imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
