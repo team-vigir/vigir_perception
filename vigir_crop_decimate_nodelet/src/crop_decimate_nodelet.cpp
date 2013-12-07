@@ -174,6 +174,15 @@ namespace vigir_image_proc{
       if (crop_decimate_.processImage(crop_decimate_config_, last_image_msg_, last_info_msg_, image_out, camera_info_out)){
         pub_.publish(image_out, camera_info_out);
       }
+      else
+      {
+        ROS_ERROR( "Could not publish imgae: could not process" );
+      }
+
+    }
+    else
+    {
+      ROS_ERROR( "Could not publish image: NULL image or NULL camera info" );
     }
   }
 
