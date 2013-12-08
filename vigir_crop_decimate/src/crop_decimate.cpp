@@ -67,6 +67,12 @@ bool CropDecimate::processImage(const CropDecimateConfig& config_in,
   int width = config.width;
   int height = config.height;
 
+  if (width == 0)
+    width = image_msg->width;
+  
+  if (height == 0)
+    height = image_msg->height;
+
   //Do nothing if we have invalid start coordinates or zero size
   if ((config.x_offset >= image_msg->width)  || (config.x_offset < 0) ||
       (config.y_offset >= image_msg->height) || (config.y_offset < 0) ||

@@ -79,11 +79,14 @@ namespace vigir_image_proc{
     image_transport::SubscriberStatusCallback connect_cb = boost::bind(&CropDecimateNodelet::connectCb, this);
     ros::SubscriberStatusCallback connect_cb_info = boost::bind(&CropDecimateNodelet::connectCb, this);
     // Make sure we don't enter connectCb() between advertising and assigning to pub_
+
+    ROS_INFO("LOCK AND DO CAMERA-Y STUFF");
     boost::lock_guard<boost::mutex> lock(connect_mutex_);
+   
     pub_ = it_out_->advertiseCamera("image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
 
     image_req_sub_ = nh_out.subscribe("image_request",1, &CropDecimateNodelet::imageRequestCb, this);
-
+    ROS_INFO("DONE CREATING ADVERTISER AND SUBSRIBING TO IMAGE REQUEST SUB");
   }
 
   // Handles (un)subscribing when clients (un)subscribe
@@ -94,9 +97,10 @@ namespace vigir_image_proc{
       sub_.shutdown();
     else if (!sub_)
     {
+      ROS_INFO("SANDIA TRYING TO SUBSCRIBE TO CAMERA")    ;
       image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
       sub_ = it_in_->subscribeCamera("image_raw", queue_size_, &CropDecimateNodelet::imageCb, this, hints);
-      ROS_INFO("subscribed to camera");
+      ROS_INFO("SANDIA SUBSCRIBED");
     }
   }
 
@@ -176,13 +180,13 @@ namespace vigir_image_proc{
       }
       else
       {
-        ROS_ERROR( "Could not publish imgae: could not process" );
+        ROS_INFO( "Could not publish imgae: could not process" );
       }
 
     }
     else
     {
-      ROS_ERROR( "Could not publish image: NULL image or NULL camera info" );
+      ROS_INFO( "Could not publish image: NULL image or NULL camera info" );
     }
   }
 
