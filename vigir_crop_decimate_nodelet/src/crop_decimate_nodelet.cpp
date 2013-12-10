@@ -46,6 +46,7 @@ namespace vigir_image_proc{
 
     int queue_size_;
     double max_video_framerate_;
+    std::string input_topic_in_camera_namespace_;
 
     CropDecimate crop_decimate_;
     vigir_image_proc::CropDecimate::CropDecimateConfig crop_decimate_config_;
@@ -74,6 +75,7 @@ namespace vigir_image_proc{
     // Read parameters
     private_nh.param("queue_size", queue_size_, 5);
     private_nh.param("max_video_framerate", max_video_framerate_, 100.0);
+    private_nh.param("input_topic_in_camera_namespace", input_topic_in_camera_namespace_, std::string("image_raw"));
 
     // Monitor whether anyone is subscribed to the output
     image_transport::SubscriberStatusCallback connect_cb = boost::bind(&CropDecimateNodelet::connectCb, this);
@@ -99,7 +101,7 @@ namespace vigir_image_proc{
     {
       ROS_INFO("SANDIA TRYING TO SUBSCRIBE TO CAMERA")    ;
       image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
-      sub_ = it_in_->subscribeCamera("image_raw", queue_size_, &CropDecimateNodelet::imageCb, this, hints);
+      sub_ = it_in_->subscribeCamera(input_topic_in_camera_namespace_, queue_size_, &CropDecimateNodelet::imageCb, this, hints);
       ROS_INFO("SANDIA SUBSCRIBED");
     }
   }
