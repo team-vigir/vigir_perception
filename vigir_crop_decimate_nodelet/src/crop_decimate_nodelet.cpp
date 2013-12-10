@@ -76,6 +76,7 @@ namespace vigir_image_proc{
     private_nh.param("queue_size", queue_size_, 5);
     private_nh.param("max_video_framerate", max_video_framerate_, 100.0);
     private_nh.param("input_topic_in_camera_namespace", input_topic_in_camera_namespace_, std::string("image_raw"));
+    ROS_INFO("Subscribing to topic %s in camera namespace", input_topic_in_camera_namespace_.c_str());
 
     // Monitor whether anyone is subscribed to the output
     image_transport::SubscriberStatusCallback connect_cb = boost::bind(&CropDecimateNodelet::connectCb, this);
@@ -99,10 +100,10 @@ namespace vigir_image_proc{
       sub_.shutdown();
     else if (!sub_)
     {
-      ROS_INFO("SANDIA TRYING TO SUBSCRIBE TO CAMERA")    ;
+      //ROS_INFO("SANDIA TRYING TO SUBSCRIBE TO CAMERA")    ;
       image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
       sub_ = it_in_->subscribeCamera(input_topic_in_camera_namespace_, queue_size_, &CropDecimateNodelet::imageCb, this, hints);
-      ROS_INFO("SANDIA SUBSCRIBED");
+      //ROS_INFO("SANDIA SUBSCRIBED");
     }
   }
 
