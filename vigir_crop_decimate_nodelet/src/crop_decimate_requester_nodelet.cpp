@@ -40,7 +40,7 @@ namespace vigir_image_proc{
   void CropDecimateRequesterNodelet::connectCb()
   {
     boost::lock_guard<boost::mutex> lock(connect_mutex_);
-    if (pub_.getNumSubscribers() == 0)
+    if ( (pub_still_.getNumSubscribers() == 0) && (pub_video_.getNumSubscribers() == 0) )
       sub_.shutdown();
     else if (!sub_)
     {
@@ -67,7 +67,7 @@ namespace vigir_image_proc{
     if( img_requested ) 
     {
         ROS_INFO( "Image recieved, requested. Calling publish" );
-        this->publishCroppedImage();
+        this->publishCroppedImage(false);
         img_requested = false;
     }
 

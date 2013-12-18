@@ -31,16 +31,17 @@ namespace vigir_image_proc{
 
     void publishTimerCb(const ros::TimerEvent& event);
 
-    void publishCroppedImage();
+    void publishCroppedImage(bool pub_as_video);
 
   protected:
 
     // ROS communication
-    boost::shared_ptr<image_transport::ImageTransport> it_in_, it_out_;
+    boost::shared_ptr<image_transport::ImageTransport> it_in_, it_out_still_, it_out_video_;
     image_transport::CameraSubscriber sub_;
 
     boost::mutex connect_mutex_;
-    image_transport::CameraPublisher pub_;
+    image_transport::CameraPublisher pub_still_;
+    image_transport::CameraPublisher pub_video_;
 
     ros::Subscriber image_req_sub_;
 
@@ -69,8 +70,11 @@ namespace vigir_image_proc{
     ros::NodeHandle& private_nh = getPrivateNodeHandle();
     ros::NodeHandle nh_in (nh, "camera");
     ros::NodeHandle nh_out(nh, "camera_out");
+    ros::NodeHandle nh_out_still(nh, "camera_out_still");
+    ros::NodeHandle nh_out_video(nh, "camera_out_video");
     it_in_ .reset(new image_transport::ImageTransport(nh_in));
-    it_out_.reset(new image_transport::ImageTransport(nh_out));
+    it_out_still_.reset(new image_transport::ImageTransport(nh_out_still));
+    it_out_video_.reset(new image_transport::ImageTransport(nh_out_video));
 
     // Read parameters
     private_nh.param("queue_size", queue_size_, 5);
@@ -86,7 +90,8 @@ namespace vigir_image_proc{
     ROS_INFO("LOCK AND DO CAMERA-Y STUFF");
     boost::lock_guard<boost::mutex> lock(connect_mutex_);
    
-    pub_ = it_out_->advertiseCamera("image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
+    pub_still_ = it_out_still_->advertiseCamera("still/image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
+    pub_video_ = it_out_video_->advertiseCamera("video/image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
 
     image_req_sub_ = nh_out.subscribe("image_request",1, &CropDecimateNodelet::imageRequestCb, this);
     ROS_INFO("DONE CREATING ADVERTISER AND SUBSRIBING TO IMAGE REQUEST SUB");
@@ -96,7 +101,7 @@ namespace vigir_image_proc{
   void CropDecimateNodelet::connectCb()
   {
     boost::lock_guard<boost::mutex> lock(connect_mutex_);
-    if (pub_.getNumSubscribers() == 0)
+    if ( (pub_still_.getNumSubscribers() == 0) && (pub_video_.getNumSubscribers() == 0) )
       sub_.shutdown();
     else if (!sub_)
     {
@@ -120,7 +125,7 @@ namespace vigir_image_proc{
 
     //Free run (direct republish) if in ALL mode
     if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ALL){
-      this->publishCroppedImage();
+      this->publishCroppedImage(true);
     }
   }
 
@@ -142,10 +147,10 @@ namespace vigir_image_proc{
 
     if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ONCE){
 
-      this->publishCroppedImage();
+      this->publishCroppedImage(false);
 
     }else if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::PUBLISH_FREQ){
-      this->publishCroppedImage();
+      this->publishCroppedImage(true);
 
       ros::NodeHandle& nh = getNodeHandle();
       
@@ -156,7 +161,7 @@ namespace vigir_image_proc{
 
     }else{
       //free run/publish always on receive
-      this->publishCroppedImage();
+      this->publishCroppedImage(true);
     }
 
   }
@@ -168,10 +173,10 @@ namespace vigir_image_proc{
       return;
     }
 
-    this->publishCroppedImage();
+    this->publishCroppedImage(true);
   }
 
-  void CropDecimateNodelet::publishCroppedImage()
+  void CropDecimateNodelet::publishCroppedImage(bool pub_as_video)
   {
     sensor_msgs::ImagePtr image_out;
     sensor_msgs::CameraInfoPtr camera_info_out;
@@ -179,11 +184,16 @@ namespace vigir_image_proc{
     // Need to make sure we have the last image/info before we try to process it.
     if(last_image_msg_ != NULL && last_info_msg_ != NULL) {
       if (crop_decimate_.processImage(crop_decimate_config_, last_image_msg_, last_info_msg_, image_out, camera_info_out)){
-        pub_.publish(image_out, camera_info_out);
+
+        if (pub_as_video){
+          pub_video_.publish(image_out, camera_info_out);
+        }else{
+          pub_still_.publish(image_out, camera_info_out);
+        }
       }
       else
       {
-        ROS_INFO( "Could not publish imgae: could not process" );
+        ROS_INFO( "Could not publish image: could not process" );
       }
 
     }
