@@ -90,8 +90,8 @@ namespace vigir_image_proc{
     ROS_INFO("LOCK AND DO CAMERA-Y STUFF");
     boost::lock_guard<boost::mutex> lock(connect_mutex_);
    
-    pub_still_ = it_out_still_->advertiseCamera("still/image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
-    pub_video_ = it_out_video_->advertiseCamera("video/image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
+    pub_still_ = it_out_still_->advertiseCamera("image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
+    pub_video_ = it_out_video_->advertiseCamera("image_raw",  1, connect_cb, connect_cb, connect_cb_info, connect_cb_info);
 
     image_req_sub_ = nh_out.subscribe("image_request",1, &CropDecimateNodelet::imageRequestCb, this);
     ROS_INFO("DONE CREATING ADVERTISER AND SUBSRIBING TO IMAGE REQUEST SUB");
