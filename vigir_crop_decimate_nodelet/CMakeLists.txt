@@ -1,40 +1,43 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(vigir_crop_decimate_nodelet)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+find_package(catkin REQUIRED COMPONENTS vigir_crop_decimate flor_perception_msgs nodelet camera_info_manager roscpp)
 
-rosbuild_init()
+## Declare things to be passed to other projects
+catkin_package(
+    LIBRARIES ${PROJECT_NAME} #${PROJECT_NAME}_requester
+    CATKIN_DEPENDS vigir_crop_decimate flor_perception_msgs nodelet camera_info_manager roscpp
+)
 
-rosbuild_add_boost_directories()
-
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+include_directories(include)
+include_directories(${catkin_INCLUDE_DIRS})
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(${PROJECT_NAME} src/crop_decimate_nodelet.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(crop_decimate_node src/crop_decimate_node.cpp)
-target_link_libraries(crop_decimate_node ${PROJECT_NAME})
+#Libraries
+add_library(${PROJECT_NAME} src/crop_decimate_nodelet.cpp)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
-#common commands for building c++ executables and libraries
-rosbuild_add_library(${PROJECT_NAME}_requester src/crop_decimate_requester_nodelet.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(crop_decimate_requester_node src/crop_decimate_requester_node.cpp)
-target_link_libraries(crop_decimate_requester_node ${PROJECT_NAME}_requester)
+add_library(${PROJECT_NAME}_requester src/crop_decimate_requester_nodelet.cpp)
+target_link_libraries(${PROJECT_NAME}_requester ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_requester ${catkin_EXPORTED_TARGETS})
+
+# Executables
+add_executable(crop_decimate_node src/crop_decimate_node.cpp)
+target_link_libraries(crop_decimate_node ${PROJECT_NAME}  ${catkin_LIBRARIES})
+add_dependencies(crop_decimate_node ${catkin_EXPORTED_TARGETS})
+
+add_executable(crop_decimate_requester_node src/crop_decimate_requester_node.cpp)
+target_link_libraries(crop_decimate_requester_node ${PROJECT_NAME}_requester  ${catkin_LIBRARIES})
+add_dependencies(crop_decimate_requester_node ${catkin_EXPORTED_TARGETS})
+
+install(TARGETS ${PROJECT_NAME} crop_decimate_node ${PROJECT_NAME}_requester crop_decimate_requester_node
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY plugin_descriptions
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  FILES_MATCHING PATTERN "*.*"
+
+)
