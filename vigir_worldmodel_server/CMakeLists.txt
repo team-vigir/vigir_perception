@@ -25,7 +25,7 @@ catkin_package(
 )
 
 #common commands for building c++ executables and libraries
-add_executable(worldmodel_server_node src/worldmodel_main.cpp ${HEADER_FILES})
+add_executable(worldmodel_server_node src/worldmodel_server_node.cpp ${HEADER_FILES})
 target_link_libraries(worldmodel_server_node ${catkin_LIBRARIES})
 add_dependencies(worldmodel_server_node ${catkin_EXPORTED_TARGETS})
 
