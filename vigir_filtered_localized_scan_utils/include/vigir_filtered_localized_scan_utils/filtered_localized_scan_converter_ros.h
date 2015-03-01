@@ -42,8 +42,8 @@ public:
   {
     ros::NodeHandle pnh("~");
 
-    cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("/cloud_out", 1, false);
-    cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("/cloud_self_filtered_out", 1, false);
+    cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("cloud_out", 1, false);
+    cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("cloud_self_filtered_out", 1, false);
     scan_sub_ = pnh.subscribe("scan", 1, &FilteredLocalizedScanConversionRos::scanCallback, this);
 
   }
