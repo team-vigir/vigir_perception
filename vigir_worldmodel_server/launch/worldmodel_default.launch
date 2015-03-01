@@ -3,11 +3,11 @@
 <launch>
   
   <!--  <node pkg="vigir_worldmodel_main" type="worldmodel_main" name="worldmodel_main" output="screen" launch-prefix="gdb -ex run iiargs">-->
-  <node pkg="vigir_worldmodel_main" type="worldmodel_main" name="worldmodel_main" output="screen" respawn="true">
+  <node pkg="vigir_worldmodel_server" type="worldmodel_server_node" name="worldmodel_server" output="screen" respawn="true">
     <!--<remap from="scan_cloud" to="scan_cloud_filtered"/>-->
     <param name="aggregator_frames" value="/world /pelvis /utorso /head" />
     <param name="root_frame" value="/world" />
-    <param name="octomap_save_folder" value="$(find vigir_worldmodel_main)/maps" />
+    <param name="octomap_save_folder" value="$(find vigir_worldmodel_server)/maps" />
     <param name="use_external_octomap" value="true" />
     <remap from="~/octomap_external_update" to="/move_group/octomap"/>
   </node>
