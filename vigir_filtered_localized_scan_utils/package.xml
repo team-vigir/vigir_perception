@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <name>vigir_filtered_localized_scan_utils</name>
+  <version>0.0.0</version>
+  <description>The vigir_filtered_localized_scan_utils package</description>
+
+  <maintainer email="kohlbrecher@sim.tu-darmstadt.de">Stefan Kohlbrecher</maintainer>
+  
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>laser_geometry</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>vigir_perception_msgs</build_depend>
+  <run_depend>laser_geometry</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>vigir_perception_msgs</run_depend>
+
+  <export>
+  </export>
+  
+</package>
