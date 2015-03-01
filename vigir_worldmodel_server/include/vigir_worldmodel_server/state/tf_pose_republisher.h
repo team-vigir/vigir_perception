@@ -33,7 +33,7 @@
 #include "ros/ros.h"
 #include "ros/console.h"
 
-#include <vigir_worldmodel_main/state/state_republisher_interface.h>
+#include <vigir_worldmodel_server/state/state_republisher_interface.h>
 
 
 #include <geometry_msgs/Quaternion.h>

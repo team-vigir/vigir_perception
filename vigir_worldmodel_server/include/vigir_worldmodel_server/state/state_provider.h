@@ -33,7 +33,7 @@
 
 #include <geometry_msgs/PoseStamped.h>
 
-#include <vigir_worldmodel_main/state/state_republisher_interface.h>
+#include <vigir_worldmodel_server/state/state_republisher_interface.h>
 
 namespace vigir_worldmodel{
 

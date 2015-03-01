@@ -41,8 +41,8 @@
 
 #include <Eigen/Core>
 
-#include <vigir_worldmodel_main/core/worldmodel_cloud_types.h>
-#include <vigir_worldmodel_main/octomap/octomap_container.h>
+#include <vigir_worldmodel_server/core/worldmodel_cloud_types.h>
+#include <vigir_worldmodel_server/octomap/octomap_container.h>
 
 #include <nav_msgs/OccupancyGrid.h>
 #include <octomap_msgs/Octomap.h>

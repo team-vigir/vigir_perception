@@ -56,10 +56,10 @@
 #include <sensor_msgs/image_encodings.h>
 
 
-#include <vigir_worldmodel_main/octomap/worldmodel_octomap.h>
-#include <vigir_worldmodel_main/point_cloud/point_cloud_aggregator.h>
+#include <vigir_worldmodel_server/octomap/worldmodel_octomap.h>
+#include <vigir_worldmodel_server/point_cloud/point_cloud_aggregator.h>
 
-#include <vigir_worldmodel_main/core/worldmodel_cloud_types.h>
+#include <vigir_worldmodel_server/core/worldmodel_cloud_types.h>
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree.h>

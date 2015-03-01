@@ -29,7 +29,7 @@
 #ifndef POINT_CLOUD_AGGREGATOR_H__
 #define POINT_CLOUD_AGGREGATOR_H__
 
-#include <vigir_worldmodel_main/point_cloud/point_cloud_container.h>
+#include <vigir_worldmodel_server/point_cloud/point_cloud_container.h>
 
 #include <geometry_msgs/Point.h>
 

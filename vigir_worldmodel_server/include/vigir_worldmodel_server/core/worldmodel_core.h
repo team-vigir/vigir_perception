@@ -31,18 +31,18 @@
 
 #include <ros/ros.h>
 
-#include <vigir_worldmodel_main/octomap/worldmodel_octomap.h>
-#include <vigir_worldmodel_main/octomap/octomap_visualization.h>
+#include <vigir_worldmodel_server/octomap/worldmodel_octomap.h>
+#include <vigir_worldmodel_server/octomap/octomap_visualization.h>
 
-#include <vigir_worldmodel_main/communication/worldmodel_communication.h>
+#include <vigir_worldmodel_server/communication/worldmodel_communication.h>
 
-#include <vigir_worldmodel_main/point_cloud/point_cloud_aggregator.h>
-#include <vigir_worldmodel_main/point_cloud/point_cloud_visualization.h>
+#include <vigir_worldmodel_server/point_cloud/point_cloud_aggregator.h>
+#include <vigir_worldmodel_server/point_cloud/point_cloud_visualization.h>
 
-#include <vigir_worldmodel_main/sensors/point_cloud_subscription_adapter.h>
+#include <vigir_worldmodel_server/sensors/point_cloud_subscription_adapter.h>
 
-#include <vigir_worldmodel_main/state/state_provider.h>
-#include <vigir_worldmodel_main/state/tf_pose_republisher.h>
+#include <vigir_worldmodel_server/state/state_provider.h>
+#include <vigir_worldmodel_server/state/tf_pose_republisher.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
@@ -52,7 +52,7 @@
 
 #include <message_filters/subscriber.h>
 
-#include <vigir_worldmodel_main/core/worldmodel_cloud_types.h>
+#include <vigir_worldmodel_server/core/worldmodel_cloud_types.h>
 
 namespace vigir_worldmodel{
 

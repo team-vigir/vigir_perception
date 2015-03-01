@@ -40,7 +40,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <vigir_worldmodel_main/octomap/octomap_container.h>
+#include <vigir_worldmodel_server/octomap/octomap_container.h>
 
 namespace vigir_worldmodel{
 

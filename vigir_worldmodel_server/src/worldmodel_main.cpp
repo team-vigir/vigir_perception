@@ -29,7 +29,7 @@
 
 #include <ros/ros.h>
 
-#include <vigir_worldmodel_main/core/worldmodel_core.h>
+#include <vigir_worldmodel_server/core/worldmodel_core.h>
 
 
 int main(int argc, char **argv)
