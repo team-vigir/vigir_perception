@@ -57,9 +57,8 @@
 namespace vigir_worldmodel{
 
   /**
- * Main world modelling class. Subscribes to point cloud data and makes environment data available through ROS interface.
- * Currently single threaded with one event/spin loop.
- */
+   * Main world modelling class. Subscribes to point cloud data and makes environment data available through ROS interface.
+   */
   class WorldmodelCore{
   public:
 
@@ -88,8 +87,8 @@ namespace vigir_worldmodel{
       unfiltered_scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 4000));
       unfiltered_scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(unfiltered_scan_cloud_aggregator_, "/scan_cloud"));
 
-      stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
-      stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/multisense_sl/points2_low_rate"));
+      //stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
+      //stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/multisense_sl/points2_low_rate"));
 
       vis_timer_ = pnh_in.createTimer(ros::Duration(1.0), &WorldmodelCore::visTimerCallback, this, false);
 
