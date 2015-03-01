@@ -35,6 +35,11 @@
 namespace vigir_filtered_localized_scan_utils
 {
 
+/**
+ * @brief The FilteredLocalizedScanConversionRos class provides
+ * a ROS(topic) interface for converting FilteredLocalizedLaserScan
+ * messages to point cloud representations.
+ */
 class FilteredLocalizedScanConversionRos
 {
 public:
