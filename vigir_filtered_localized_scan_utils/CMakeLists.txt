@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   laser_geometry
   roscpp
   vigir_perception_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -94,6 +95,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -103,16 +105,12 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(vigir_filtered_localized_scan_utils_node src/vigir_filtered_localized_scan_utils_node.cpp)
+add_executable(scan_to_clouds_pub_node src/scan_to_clouds_pub_node.cpp)
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(vigir_filtered_localized_scan_utils_node vigir_filtered_localized_scan_utils_generate_messages_cpp)
 
-## Specify libraries to link a library or executable target against
-# target_link_libraries(vigir_filtered_localized_scan_utils_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(scan_to_clouds_pub_node
+   ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
