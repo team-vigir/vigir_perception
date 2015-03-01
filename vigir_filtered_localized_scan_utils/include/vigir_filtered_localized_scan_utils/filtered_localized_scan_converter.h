@@ -40,6 +40,12 @@
 namespace vigir_filtered_localized_scan_utils
 {
 
+/**
+ * @brief The FilteredLocalizedScanConversion class provides
+ * conversion functionality for converting a
+ * FilteredLocalizedLaserScan messages to point cloud
+ * representations.
+ */
 class FilteredLocalizedScanConversion
 {
 public:
@@ -87,9 +93,6 @@ public:
 
     return true;
   }
-
-
-
 
 private:
   sensor_msgs::LaserScan scan_;
