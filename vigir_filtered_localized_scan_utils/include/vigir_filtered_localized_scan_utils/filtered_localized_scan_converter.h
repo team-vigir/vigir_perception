@@ -55,7 +55,6 @@ public:
     tf::StampedTransform tf_start;
     tf::StampedTransform tf_end;
 
-    //tf_transformer_.clear();
     tf::transformMsgToTF(scan_in.transform_first_ray, tf_start);
     tf::transformMsgToTF(scan_in.transform_last_ray, tf_end);
 
@@ -64,7 +63,7 @@ public:
     tf_start.stamp_ = scan_.header.stamp;
 
     tf_end.frame_id_ = tf_start.frame_id_;
-    tf_end.child_frame_id_ = tf_start.frame_id_;
+    tf_end.child_frame_id_ = tf_start.child_frame_id_;
     tf_end.stamp_ = scan_.header.stamp + ros::Duration().fromSec((scan_.ranges.size() -1)*scan_.time_increment) ;
 
     tf_transformer_.setTransform(tf_start);
