@@ -20,6 +20,8 @@ catkin_package(
 
 
 add_executable(scan_to_clouds_pub_node src/scan_to_clouds_pub_node.cpp)
+# Surprised below is required, but see https://github.com/raptort3000/ublox_catkin/pull/1
+add_dependencies(scan_to_clouds_pub_node ${vigir_perception_msgs_EXPORTED_TARGETS})
 target_link_libraries(scan_to_clouds_pub_node
    ${catkin_LIBRARIES}
 )
