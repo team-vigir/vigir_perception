@@ -95,6 +95,7 @@ namespace vigir_worldmodel{
       if (!p_use_external_octomap_){
         octo_update_timer_ = pnh_in.createTimer(ros::Duration(0.1), &WorldmodelCore::octoUpdateTimerCallback, this, false);
       }else{
+        octomap_->setUpdatedFromExternal(true);
         octo_external_update_sub_ = pnh_in.subscribe("octomap_external_update", 1, &WorldmodelCore::octomapExternalUpdateCallback, this);
       }
 

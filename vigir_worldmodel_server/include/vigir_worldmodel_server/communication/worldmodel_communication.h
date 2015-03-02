@@ -52,6 +52,8 @@
 #include <std_msgs/Float64.h>
 #include <nav_msgs/OccupancyGrid.h>
 
+#include <std_srvs/Empty.h>
+
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 
@@ -807,6 +809,14 @@ namespace vigir_worldmodel{
         ROS_INFO("Resetting worldmodel internal state");
         scan_cloud_aggregator_->reset();
         octomap_->reset();
+
+        if (octomap_->isUpdatedFromExternal())
+        {
+          std_srvs::Empty srv_empty;
+
+          ros::service::call("clear_octomap", srv_empty);
+        }
+
       }else if (msg->data == "save_octomap"){
         std::string file_name;
         if (FileUtils::getTimeBasedUniqueFilename(p_octomap_save_folder_, "octo", ".bt", file_name)){

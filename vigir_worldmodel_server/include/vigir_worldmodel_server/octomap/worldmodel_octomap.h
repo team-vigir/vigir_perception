@@ -55,12 +55,16 @@ namespace vigir_worldmodel{
 
     WorldmodelOctomap(const std::string& frame_id, double res = 0.05, double max_range = 10.0)
     : map(frame_id, res, max_range)
+    , updated_from_external_(false)
     {
       map.setLastUpdateStamp(ros::Time(0));
     }
 
     ~WorldmodelOctomap()
     {}
+
+    void setUpdatedFromExternal(bool val){ updated_from_external_ = val;};
+    const bool isUpdatedFromExternal() const { return updated_from_external_; };
 
     void reset()
     {
@@ -400,6 +404,7 @@ namespace vigir_worldmodel{
     unsigned m_multires2DScale;
     octomap::OcTreeKey m_paddedMinKey;    
     unsigned int grid_map_width_;
+    bool updated_from_external_;
   };
 
 }
