@@ -12,4 +12,11 @@
     <remap from="~/octomap_external_update" to="/move_group/octomap"/>
   </node>
   
+  <node pkg="vigir_filtered_localized_scan_utils" type="scan_to_clouds_pub_node" name="ocs_scan_to_clouds_pub_node" output="screen">
+    <remap from="~/scan" to="/move_group/scan_filtered_localized"/>
+    <remap from="~/cloud_out" to="/scan_cloud"/>
+    <remap from="~/cloud_self_filtered_out" to="/scan_cloud_filtered"/>
+    <param name="scan_sub_queue_size" value="1200"/>
+  </node>
+  
 </launch>
