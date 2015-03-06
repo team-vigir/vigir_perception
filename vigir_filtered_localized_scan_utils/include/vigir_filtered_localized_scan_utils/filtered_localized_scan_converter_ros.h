@@ -47,9 +47,11 @@ public:
   {
     ros::NodeHandle pnh("~");
 
+    pnh.param("scan_sub_queue_size", p_scan_queue_size_, 1);
+
     cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("cloud_out", 1, false);
     cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("cloud_self_filtered_out", 1, false);
-    scan_sub_ = pnh.subscribe("scan", 1, &FilteredLocalizedScanConversionRos::scanCallback, this);
+    scan_sub_ = pnh.subscribe("scan", p_scan_queue_size_, &FilteredLocalizedScanConversionRos::scanCallback, this);
 
   }
 
@@ -75,6 +77,8 @@ private:
 
   sensor_msgs::PointCloud2 cloud_out_;
   sensor_msgs::PointCloud2 cloud_self_filtered_out;
+
+  int p_scan_queue_size_;
 
 };
 
