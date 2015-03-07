@@ -88,7 +88,7 @@ namespace vigir_worldmodel{
       std::vector<tf::StampedTransform> tmp;
       tmp_comparison_container_ = PointCloudContainer<PointT>(pc, tmp);
 
-      pointclouds_ = boost::circular_buffer<PointCloudContainer<PointT> >(max_storage);
+      //pointclouds_ = boost::circular_buffer<PointCloudContainer<PointT> >(max_storage);
 
       ros::NodeHandle pnh("~");
 
@@ -137,7 +137,8 @@ namespace vigir_worldmodel{
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
       if (cloud->header.stamp > last_insertion_){
-        pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
+        //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
+        pointclouds_.insert(std::pair<uint64_t, PointCloudContainer<PointT> >(cloud->header.stamp, PointCloudContainer<PointT> (cloud, transforms)) );
         last_insertion_ = cloud->header.stamp;
       }else{
         ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
@@ -160,22 +161,24 @@ namespace vigir_worldmodel{
 
       pcl::PointCloud<PointT> tmp_cloud;
 
-      typename boost::circular_buffer<PointCloudContainer<PointT> >::iterator it = pointclouds_.end();
+      //typename boost::circular_buffer<PointCloudContainer<PointT> >::iterator it = pointclouds_.end();
+      typename std::map<uint64_t, PointCloudContainer<PointT> >::const_iterator it = pointclouds_.end();
+
 
       //Access only elements that are actually there
       size_t num_clouds = std::min(size, aggregation_size);
-      it -= num_clouds;
+      std::advance(it, -num_clouds);
 
       cloud->clear();
 
-      for (;it < pointclouds_.end(); ++it){
+      for (;it != pointclouds_.end(); ++it){
         Eigen::Matrix4f sensorToWorld;
 
 
-        pcl_ros::transformAsMatrix(it->getTransform(frame_id_idx), sensorToWorld);
+        pcl_ros::transformAsMatrix(it->second.getTransform(frame_id_idx), sensorToWorld);
         //std::cout << "\nMat:\n" << sensorToWorld << "\nframe_id: " << frame_id << "frame_id idx: " << frame_id_idx << "\n";
 
-        pcl::transformPointCloud(it->getPointcloud(), tmp_cloud, sensorToWorld);
+        pcl::transformPointCloud(it->second.getPointcloud(), tmp_cloud, sensorToWorld);
 
         *cloud += tmp_cloud;
       }
@@ -183,7 +186,7 @@ namespace vigir_worldmodel{
       //PointCloudContainer tmp(ros::Time::now());
       //std::binary_search (pointclouds_.begin(), pointclouds_.end(), tmp, pointcloud_timestamp_compare);
 
-      cloud->header = pointclouds_.rbegin()->getPointcloud().header;
+      cloud->header = pointclouds_.rbegin()->second.getPointcloud().header;
       cloud->header.frame_id = frame_id;
 
       return true;
@@ -246,17 +249,21 @@ namespace vigir_worldmodel{
         return false;
       }
 
-      typename boost::circular_buffer<PointCloudContainer<PointT> >::reverse_iterator it = pointclouds_.rbegin();
-      it += index;
+      //typename boost::circular_buffer<PointCloudContainer<PointT> >::reverse_iterator it = pointclouds_.rbegin();
+
+      typename std::map<uint64_t, PointCloudContainer<PointT> >::reverse_iterator it = pointclouds_.rbegin();
+
+      //it += index;
+      std::advance(it, index);
 
       Eigen::Matrix4f sensorToFrame;
-      pcl_ros::transformAsMatrix(it->getTransform(frame_id_idx), sensorToFrame);
+      pcl_ros::transformAsMatrix(it->second.getTransform(frame_id_idx), sensorToFrame);
 
-      pcl::transformPointCloud(it->getPointcloud(), *cloud, sensorToFrame);
+      pcl::transformPointCloud(it->second.getPointcloud(), *cloud, sensorToFrame);
       cloud->header.frame_id = frame_id;
 
       if (origin != 0){
-        *origin = it->getTransform(frame_id_idx).getOrigin();
+        *origin = it->second.getTransform(frame_id_idx).getOrigin();
       }
 
       return true;
@@ -302,7 +309,8 @@ namespace vigir_worldmodel{
         return false;
       }
 
-      typename boost::circular_buffer<PointCloudContainer <PointT> >::iterator it;
+      //typename boost::circular_buffer<PointCloudContainer <PointT> >::iterator it;
+      typename std::map<uint64_t, PointCloudContainer<PointT> >::const_iterator it;
 
       //If we have zero request timestamp, just return latest. Otherwise, search for first point cloud newer than req_stamp
       if (req_stamp.isZero()){
@@ -332,13 +340,13 @@ namespace vigir_worldmodel{
       }
 
       Eigen::Matrix4f sensorToFrame;
-      pcl_ros::transformAsMatrix(it->getTransform(frame_id_idx), sensorToFrame);
+      pcl_ros::transformAsMatrix(it->second.getTransform(frame_id_idx), sensorToFrame);
 
-      pcl::transformPointCloud(it->getPointcloud(), cloud, sensorToFrame);
+      pcl::transformPointCloud(it->second.getPointcloud(), cloud, sensorToFrame);
       cloud.header.frame_id = frame_id;
 
       if (origin != 0){
-        *origin = it->getTransform(frame_id_idx).getOrigin();
+        *origin = it->second.getTransform(frame_id_idx).getOrigin();
       }
 
       return true;
@@ -420,7 +428,8 @@ namespace vigir_worldmodel{
     boost::shared_ptr<tf::TransformListener> tf_listener_;
 
     boost::mutex cloud_circular_buffer_mutex_;
-    boost::circular_buffer<PointCloudContainer<PointT> > pointclouds_;
+    //boost::circular_buffer<PointCloudContainer<PointT> > pointclouds_;
+    std::map<uint64_t, PointCloudContainer<PointT> > pointclouds_;
     size_t max_storage;
 
     PointCloudContainer<PointT> tmp_comparison_container_;
