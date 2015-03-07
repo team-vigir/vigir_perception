@@ -109,7 +109,7 @@ namespace vigir_worldmodel{
     void reset()
     {
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
-      last_insertion_ = 0;
+      last_insertion_ = ros::Time(0);
       pointclouds_.clear();
     }
 
@@ -120,13 +120,13 @@ namespace vigir_worldmodel{
       std::vector<tf::StampedTransform> transforms;
       transforms.resize(number_of_frames);
 
+      ros::Time cloud_stamp = pcl_conversions::fromPCL(cloud->header.stamp);
+
       try {
-        ros::Time time;
-        time.fromNSec(cloud->header.stamp*1e3);
-        tf_listener_->waitForTransform(frames_list_[0], cloud->header.frame_id, time, ros::Duration(0.5));
+        tf_listener_->waitForTransform(frames_list_[0], cloud->header.frame_id, cloud_stamp, ros::Duration(0.5));
         for (size_t i = 0; i < number_of_frames; ++i){
 
-          tf_listener_->lookupTransform(frames_list_[i], cloud->header.frame_id, time, transforms[i]);
+          tf_listener_->lookupTransform(frames_list_[i], cloud->header.frame_id, cloud_stamp, transforms[i]);
         }
       } catch(tf::TransformException& ex){
         ROS_ERROR_STREAM( "Transform error of sensor data: " << ex.what() << ", quitting callback");
@@ -135,10 +135,10 @@ namespace vigir_worldmodel{
 
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
-      if (cloud->header.stamp > last_insertion_){
+      if (cloud_stamp > last_insertion_){
         //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
-        pointclouds_.insert(std::pair<uint64_t, PointCloudContainer<PointT> >(cloud->header.stamp, PointCloudContainer<PointT> (cloud, transforms)) );
-        last_insertion_ = cloud->header.stamp;
+        pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud->header.stamp, PointCloudContainer<PointT> (cloud, transforms)) );
+        last_insertion_ = cloud_stamp;
       }else{
         ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
                  //Difference: %ul nanoseconds", cloud->header.stamp-last_insertion_ );
@@ -161,7 +161,7 @@ namespace vigir_worldmodel{
       pcl::PointCloud<PointT> tmp_cloud;
 
       //typename boost::circular_buffer<PointCloudContainer<PointT> >::iterator it = pointclouds_.end();
-      typename std::map<uint64_t, PointCloudContainer<PointT> >::const_iterator it = pointclouds_.end();
+      typename std::map<ros::Time, PointCloudContainer<PointT> >::const_iterator it = pointclouds_.end();
 
 
       //Access only elements that are actually there
@@ -250,7 +250,7 @@ namespace vigir_worldmodel{
 
       //typename boost::circular_buffer<PointCloudContainer<PointT> >::reverse_iterator it = pointclouds_.rbegin();
 
-      typename std::map<uint64_t, PointCloudContainer<PointT> >::reverse_iterator it = pointclouds_.rbegin();
+      typename std::map<ros::Time, PointCloudContainer<PointT> >::reverse_iterator it = pointclouds_.rbegin();
 
       //it += index;
       std::advance(it, index);
@@ -309,7 +309,7 @@ namespace vigir_worldmodel{
       }
 
       //typename boost::circular_buffer<PointCloudContainer <PointT> >::iterator it;
-      typename std::map<uint64_t, PointCloudContainer<PointT> >::const_iterator it;
+      typename std::map<ros::Time, PointCloudContainer<PointT> >::const_iterator it;
 
       //If we have zero request timestamp, just return latest. Otherwise, search for first point cloud newer than req_stamp
       if (req_stamp.isZero()){
@@ -324,11 +324,11 @@ namespace vigir_worldmodel{
         PointcloudStampCompare<PointT>());
         */
 
-        uint64_t stamp = pcl_conversions::toPCL(req_stamp);
+        //uint64_t stamp = pcl_conversions::toPCL(req_stamp);
 
         it = std::upper_bound(pointclouds_.begin(),
                               pointclouds_.end(),
-                              stamp);
+                              req_stamp);
 
 
         //@TODO Debugging helper stuff, remove when sure it's no more needed.
@@ -436,7 +436,7 @@ namespace vigir_worldmodel{
 
     boost::mutex cloud_circular_buffer_mutex_;
     //boost::circular_buffer<PointCloudContainer<PointT> > pointclouds_;
-    std::map<uint64_t, PointCloudContainer<PointT> > pointclouds_;
+    std::map<ros::Time, PointCloudContainer<PointT> > pointclouds_;
     size_t max_storage;
 
     PointCloudContainer<PointT> tmp_comparison_container_;
@@ -449,7 +449,7 @@ namespace vigir_worldmodel{
 
     pcl::CropBox<PointT> crop_box_filter;
 
-    uint64_t last_insertion_;
+    ros::Time last_insertion_;
   };
 
 }
