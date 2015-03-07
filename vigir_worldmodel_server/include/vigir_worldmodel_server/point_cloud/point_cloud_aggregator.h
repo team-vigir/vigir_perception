@@ -62,7 +62,6 @@ namespace vigir_worldmodel{
     {
       return (i.getStamp()<j.getStamp());
     }
-
   };
 
   /**
@@ -318,11 +317,19 @@ namespace vigir_worldmodel{
         --it;
       }else{
         tmp_comparison_container_.setStamp(req_stamp);
-
+        /*
         it = std::upper_bound(pointclouds_.begin(),
         pointclouds_.end(),
         tmp_comparison_container_,
         PointcloudStampCompare<PointT>());
+        */
+
+        uint64_t stamp = pcl_conversions::toPCL(req_stamp);
+
+        it = std::upper_bound(pointclouds_.begin(),
+                              pointclouds_.end(),
+                              stamp);
+
 
         //@TODO Debugging helper stuff, remove when sure it's no more needed.
         /*
