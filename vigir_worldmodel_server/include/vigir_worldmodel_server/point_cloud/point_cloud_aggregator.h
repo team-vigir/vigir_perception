@@ -137,7 +137,7 @@ namespace vigir_worldmodel{
 
       if (cloud_stamp > last_insertion_){
         //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
-        pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud->header.stamp, PointCloudContainer<PointT> (cloud, transforms)) );
+        pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
         last_insertion_ = cloud_stamp;
       }else{
         ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
@@ -326,9 +326,11 @@ namespace vigir_worldmodel{
 
         //uint64_t stamp = pcl_conversions::toPCL(req_stamp);
 
+        /* @TODO: Fix upper bound
         it = std::upper_bound(pointclouds_.begin(),
                               pointclouds_.end(),
                               req_stamp);
+                              */
 
 
         //@TODO Debugging helper stuff, remove when sure it's no more needed.
