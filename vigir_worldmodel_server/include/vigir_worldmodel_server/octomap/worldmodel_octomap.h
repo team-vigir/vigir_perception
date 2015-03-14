@@ -74,8 +74,15 @@ namespace vigir_worldmodel{
     bool updateOctomap(const octomap_msgs::Octomap& msg){
       octomap::AbstractOcTree* incoming_octomap = octomap_msgs::msgToMap(msg);
 
-      if (!incoming_octomap)
+      if (!incoming_octomap){
+        ROS_WARN_THROTTLE(10.0,"Received octomap msg conversion failed, null pointer. This message is throttled.");
         return false;
+      }
+
+      if (incoming_octomap->size() == 0){
+        ROS_WARN_THROTTLE(10.0,"Received octomap has 0 size. This message is throttled.");
+        return false;
+      }
 
       map.update(incoming_octomap);
       map.setLastUpdateStamp(msg.header.stamp);

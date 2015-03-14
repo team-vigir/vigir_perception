@@ -172,8 +172,10 @@ namespace vigir_worldmodel{
 
     void octomapExternalUpdateCallback(const octomap_msgs::OctomapConstPtr& msg)
     {
-      if (!octomap_->updateOctomap(*msg))
-        ROS_WARN("External octomap update failed!");
+      //if (!octomap_->updateOctomap(*msg))
+      //  ROS_WARN("External octomap update failed!");
+
+      octomap_->updateOctomap(*msg);
     }
 
 
