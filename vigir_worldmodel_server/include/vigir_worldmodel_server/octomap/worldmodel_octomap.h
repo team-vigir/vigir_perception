@@ -72,6 +72,12 @@ namespace vigir_worldmodel{
     }
 
     bool updateOctomap(const octomap_msgs::Octomap& msg){
+
+      if (msg.id.empty()){
+        ROS_WARN_THROTTLE(10.0,"Received octomap msg with empty id. This message is throttled.");
+        return false;
+      }
+
       octomap::AbstractOcTree* incoming_octomap = octomap_msgs::msgToMap(msg);
 
       if (!incoming_octomap){
