@@ -77,7 +77,7 @@ namespace vigir_worldmodel{
       pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
 
 
-      waitForTf();
+      waitForTf(pnh_in);
 
       octomap_.reset(new WorldmodelOctomap(p_root_frame_));
 
@@ -179,19 +179,26 @@ namespace vigir_worldmodel{
     }
 
 
-    void waitForTf()
+    void waitForTf(ros::NodeHandle& pnh)
     {
       ros::WallTime start = ros::WallTime::now();
       ROS_INFO("Waiting for tf to become available");
+
+      pnh.param("required_frames", p_required_frames_list_, std::string(""));
+      boost::algorithm::split(required_frames_list_, p_required_frames_list_, boost::is_any_of("\t "));
+
 
       bool transforms_successful = false;
 
       while (!transforms_successful){
 
-        transforms_successful =
-            tf_listener_->waitForTransform(p_root_frame_, "/head_hokuyo_frame", ros::Time(0), ros::Duration(10.0)) &&
-            tf_listener_->waitForTransform(p_root_frame_, "/l_hand", ros::Time(0), ros::Duration(10.0)) &&
-            tf_listener_->waitForTransform(p_root_frame_, "/r_hand", ros::Time(0), ros::Duration(10.0));
+        bool success = true;
+
+        for (size_t i = 0; i < required_frames_list_.size(); ++i){
+          success = success && tf_listener_->waitForTransform(p_root_frame_, required_frames_list_[i], ros::Time(0), ros::Duration(10.0));
+        }
+
+        transforms_successful = success;
       }
       ros::WallTime end = ros::WallTime::now();
       ROS_INFO("Finished waiting for tf, waited %f seconds", (end-start).toSec());
@@ -223,6 +230,8 @@ namespace vigir_worldmodel{
     PointCloudVisualization point_cloud_vis_;
 
     std::string p_root_frame_;
+    std::string p_required_frames_list_;
+    std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
 
     ros::Timer vis_timer_;
