@@ -32,11 +32,15 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include <visualization_msgs/Marker.h>
+#include <shape_msgs/Mesh.h>
+
 #include <pcl/point_cloud.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <vigir_point_cloud_proc/cloud_to_mesh.h>
+#include <vigir_point_cloud_proc/mesh_conversions.h>
 //#include <vigir_filtered_localized_scan_utils/filtered_localized_scan_converter.h>
 
 namespace vigir_point_cloud_proc
@@ -59,8 +63,9 @@ public:
 
     ROS_INFO("CloudToMeshRos using queue size %d", p_cloud_queue_size_);
 
-    cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("cloud_out", 1, false);
-    cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("cloud_self_filtered_out", 1, false);
+    marker_pub_ = pnh.advertise<visualization_msgs::Marker>("mesh_marker", 1, false);
+    shape_pub_  = pnh.advertise<shape_msgs::Mesh>("mesh_shape", 1, false);
+
     cloud_sub_ = pnh.subscribe("cloud", p_cloud_queue_size_, &CloudToMeshRos::cloudCallback, this);
 
   }
@@ -73,6 +78,20 @@ public:
     cloud_to_mesh_.setInput(pc);
 
     cloud_to_mesh_.computeMesh();
+
+    if (marker_pub_.getNumSubscribers() > 0){
+      visualization_msgs::Marker mesh_marker;
+
+      meshToMarkerMsg(cloud_to_mesh_.getMesh() ,mesh_marker);
+      marker_pub_.publish(mesh_marker);
+    }
+
+    if (shape_pub_.getNumSubscribers() > 0){
+      shape_msgs::Mesh shape_mesh;
+
+      meshToShapeMsg(cloud_to_mesh_.getMesh() ,shape_mesh);
+      shape_pub_.publish(shape_mesh);
+    }
 
 
 
@@ -94,8 +113,8 @@ private:
   //sensor_msgs::LaserScan scan_;
   //laser_geometry::LaserProjection laser_proj_;
   ros::Subscriber cloud_sub_;
-  ros::Publisher cloud_pub_;
-  ros::Publisher cloud_self_filtered_pub_;
+  ros::Publisher marker_pub_;
+  ros::Publisher shape_pub_;
 
   sensor_msgs::PointCloud2 cloud_out_;
   sensor_msgs::PointCloud2 cloud_self_filtered_out;

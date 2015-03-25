@@ -89,9 +89,9 @@ public:
     */
 
     pcl::MovingLeastSquares<PointT, PointTNormal> mls;
-    mls.setUpsamplingMethod(pcl::MovingLeastSquares<PointT, PointTNormal>::VOXEL_GRID_DILATION);
-    mls.setDilationVoxelSize(0.05);
-    mls.setDilationIterations(2);
+    //mls.setUpsamplingMethod(pcl::MovingLeastSquares<PointT, PointTNormal>::VOXEL_GRID_DILATION);
+    //mls.setDilationVoxelSize(0.05);
+    //mls.setDilationIterations(2);
     mls.setSearchRadius(0.1);
     mls.setPolynomialOrder(1);
     mls.setComputeNormals(true);
@@ -118,7 +118,6 @@ public:
     tree2->setInputCloud (pointcloudNormal);
     // Initialize objects
 
-    pcl::PolygonMesh mesh;
 
     /*
     //pcl::MarchingCubesGreedy<PointTNormal> mc;
@@ -157,7 +156,7 @@ public:
     greedy.setInputCloud(pointcloudNormal);
 
     std::cout << "start reconstruct\n";
-    greedy.reconstruct(mesh);
+    greedy.reconstruct(mesh_);
 
     //Saving to disk in VTK format:
     //pcl::io::saveVTKFile ("mesh.vtk", mesh);
@@ -165,10 +164,12 @@ public:
     //surface_reconstruction_->setSearchMethod(tree2);
     //surface_reconstruction_->setInputCloud(pointcloudNormal);
 
-    pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh);
+    pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
 
 
   }
+
+  const pcl::PolygonMesh& getMesh() const { return mesh_; };
 
 private:
   //sensor_msgs::LaserScan scan_;
@@ -177,6 +178,9 @@ private:
   boost::shared_ptr<pcl::PointCloud<PointT> > pc_;
 
   boost::shared_ptr<pcl::SurfaceReconstruction<pcl::PointNormal> > surface_reconstruction_;
+
+  pcl::PolygonMesh mesh_;
+
 
 
 };

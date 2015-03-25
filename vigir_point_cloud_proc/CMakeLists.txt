@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   shape_msgs
+  pcl_msgs
   visualization_msgs
 )
 
@@ -22,7 +23,7 @@ include_directories(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES vigir_point_cloud_proc
-  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs shape_msgs visualization_msgs
+  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs shape_msgs visualization_msgs pcl_msgs
   DEPENDS system_lib
 )
 
