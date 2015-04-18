@@ -316,7 +316,7 @@ namespace vigir_worldmodel{
         it = pointclouds_.end();
         --it;
       }else{
-        tmp_comparison_container_.setStamp(req_stamp);
+        //tmp_comparison_container_.setStamp(req_stamp);
         /*
         it = std::upper_bound(pointclouds_.begin(),
         pointclouds_.end(),
@@ -326,11 +326,12 @@ namespace vigir_worldmodel{
 
         //uint64_t stamp = pcl_conversions::toPCL(req_stamp);
 
-        /* @TODO: Fix upper bound
-        it = std::upper_bound(pointclouds_.begin(),
-                              pointclouds_.end(),
-                              req_stamp);
-                              */
+        //@TODO: Fix upper bound
+        it = pointclouds_.upper_bound(req_stamp);
+            //std::upper_bound(pointclouds_.begin(),
+            //                  pointclouds_.end(),
+            //                  req_stamp);
+
 
 
         //@TODO Debugging helper stuff, remove when sure it's no more needed.
