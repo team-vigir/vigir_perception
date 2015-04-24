@@ -196,6 +196,7 @@ namespace vigir_worldmodel{
 
         for (size_t i = 0; i < required_frames_list_.size(); ++i){
           success = success && tf_listener_->waitForTransform(p_root_frame_, required_frames_list_[i], ros::Time(0), ros::Duration(10.0));
+          ROS_WARN("Worldmodel server waiting for tf...");
         }
 
         transforms_successful = success;
