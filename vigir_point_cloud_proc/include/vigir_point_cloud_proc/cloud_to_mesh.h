@@ -92,6 +92,14 @@ public:
     norm_est.compute (*point_cloud_normal_voxelized);
     */
 
+    boost::shared_ptr<pcl::PointCloud<PointT> > pc_voxelized (new pcl::PointCloud<PointT> ());
+    pcl::VoxelGrid<PointT> pre_filter;
+    pre_filter.setInputCloud(pc_);
+    pre_filter.setLeafSize(0.05, 0.05, 0.05);
+    pre_filter.filter(*pc_voxelized);
+
+    double time_prefilter = stop_watch_.getTimeSeconds();
+    std::cout << "Prefilter finished in " << time_prefilter << " s.\n";
 
 
     pcl::MovingLeastSquares<PointT, PointTNormal> mls;
@@ -101,27 +109,38 @@ public:
     mls.setSearchRadius(0.1);
     mls.setPolynomialOrder(1);
     mls.setComputeNormals(true);
-    mls.setInputCloud(pc_);
+    mls.setInputCloud(pc_voxelized);
 
     boost::shared_ptr<pcl::PointCloud<PointTNormal> > point_cloud_mls_normal;
     point_cloud_mls_normal.reset(new pcl::PointCloud<PointTNormal>);
-    std::cout << "start mls\n";
+    //std::cout << "start mls\n";
     mls.process(*point_cloud_mls_normal);
 
-    std::cout << "start voxel\n";
+    double time_mls = stop_watch_.getTimeSeconds();
+    std::cout << "MLS finished in " << time_mls - time_prefilter << " s.\n";
+
+
+    //std::cout << "start voxel\n";
     pcl::VoxelGrid<PointTNormal> filter;
     filter.setInputCloud(point_cloud_mls_normal);
     filter.setLeafSize(0.05, 0.05, 0.05);
     filter.filter(*point_cloud_normal_voxelized);
+
+    double time_postfilter = stop_watch_.getTimeSeconds();
+    std::cout << "Postfilter finished in " << time_postfilter - time_mls << " s.\n";
+
 
 
     //pcl::copyPointCloud (*pc_, *point_cloud_normal_voxelized);
     //pointcloud.reset();
 
     // Create the search method
-    std::cout << "start kdtree\n";
+    //std::cout << "start kdtree\n";
     boost::shared_ptr<pcl::search::KdTree<PointTNormal> > tree2 (new pcl::search::KdTree<PointTNormal>);
     tree2->setInputCloud (point_cloud_normal_voxelized);
+
+    double time_kdtree = stop_watch_.getTimeSeconds();
+    std::cout << "KdTree finished in " << time_kdtree - time_postfilter << " s.\n";
     // Initialize objects
 
 
@@ -161,8 +180,11 @@ public:
     greedy.setSearchMethod(tree2);
     greedy.setInputCloud(point_cloud_normal_voxelized);
 
-    std::cout << "start reconstruct\n";
+    //std::cout << "start reconstruct\n";
     greedy.reconstruct(mesh_);
+
+    double time_greedy = stop_watch_.getTimeSeconds();
+    std::cout << "Greedy finished in " << time_greedy - time_kdtree << " s.\n";
 
     //Saving to disk in VTK format:
     //pcl::io::saveVTKFile ("mesh.vtk", mesh);
@@ -170,7 +192,7 @@ public:
     //surface_reconstruction_->setSearchMethod(tree2);
     //surface_reconstruction_->setInputCloud(point_cloud_normal_voxelized);
 
-    std::cout << "Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
+    std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
 
     pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
 
