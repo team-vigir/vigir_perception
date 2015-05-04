@@ -68,10 +68,16 @@ public:
   CloudToMesh()
   {
     surface_reconstruction_.reset(new pcl::MarchingCubesRBF<PointTNormal>());
+
+    voxel_size_ = 0.05;
   }
 
   bool setInput( const boost::shared_ptr<pcl::PointCloud<PointT> > pc_in){
     pc_ = pc_in;
+  }
+
+  void setVoxelFilterSize(double size){
+    voxel_size_ = size;
   }
 
   bool computeMesh()
@@ -95,7 +101,7 @@ public:
     boost::shared_ptr<pcl::PointCloud<PointT> > pc_voxelized (new pcl::PointCloud<PointT> ());
     pcl::VoxelGrid<PointT> pre_filter;
     pre_filter.setInputCloud(pc_);
-    pre_filter.setLeafSize(0.05, 0.05, 0.05);
+    pre_filter.setLeafSize(voxel_size_, voxel_size_, voxel_size_);
     pre_filter.filter(*pc_voxelized);
 
     double time_prefilter = stop_watch_.getTimeSeconds();
@@ -103,10 +109,12 @@ public:
 
 
     pcl::MovingLeastSquares<PointT, PointTNormal> mls;
+
     //mls.setUpsamplingMethod(pcl::MovingLeastSquares<PointT, PointTNormal>::VOXEL_GRID_DILATION);
-    //mls.setDilationVoxelSize(0.05);
-    //mls.setDilationIterations(2);
-    mls.setSearchRadius(0.1);
+    //mls.setDilationVoxelSize(0.025);
+    //mls.setDilationIterations(1);
+
+    mls.setSearchRadius(0.05);
     mls.setPolynomialOrder(1);
     mls.setComputeNormals(true);
     mls.setInputCloud(pc_voxelized);
@@ -123,7 +131,7 @@ public:
     //std::cout << "start voxel\n";
     pcl::VoxelGrid<PointTNormal> filter;
     filter.setInputCloud(point_cloud_mls_normal);
-    filter.setLeafSize(0.05, 0.05, 0.05);
+    filter.setLeafSize(voxel_size_, voxel_size_, voxel_size_);
     filter.filter(*point_cloud_normal_voxelized);
 
     double time_postfilter = stop_watch_.getTimeSeconds();
@@ -169,9 +177,9 @@ public:
     */
 
     pcl::GreedyProjectionTriangulation<pcl::PointNormal> greedy;
-    greedy.setSearchRadius(0.2);
+    greedy.setSearchRadius(0.1);
     greedy.setMu (2.5);
-    greedy.setMaximumNearestNeighbors(100);
+    greedy.setMaximumNearestNeighbors(50);
     greedy.setMinimumAngle(M_PI/18); // 10 degrees
     greedy.setMaximumAngle(2*M_PI/3); // 120 degrees
     greedy.setNormalConsistency(true);
@@ -212,6 +220,8 @@ private:
   pcl::PolygonMesh mesh_;
 
   pcl::StopWatch stop_watch_;
+
+  double voxel_size_;
 
 
 
