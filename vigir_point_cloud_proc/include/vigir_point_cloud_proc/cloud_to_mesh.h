@@ -41,6 +41,7 @@
 #include <pcl/surface/poisson.h>
 #include <pcl/surface/gp3.h>
 #include <pcl/surface/mls.h>
+#include <pcl/common/time.h>
 
 #include <pcl/filters/voxel_grid.h>
 
@@ -75,7 +76,10 @@ public:
 
   bool computeMesh()
   {
-    boost::shared_ptr<pcl::PointCloud<PointTNormal> > pointcloudNormal (new pcl::PointCloud<PointTNormal> ());
+
+    stop_watch_.reset();
+
+    boost::shared_ptr<pcl::PointCloud<PointTNormal> > point_cloud_normal_voxelized (new pcl::PointCloud<PointTNormal> ());
 
     /*
     pcl::NormalEstimation<PointT, PointTNormal> norm_est;
@@ -85,8 +89,10 @@ public:
     norm_est.setInputCloud (pc_);
     norm_est.setSearchMethod (tree);
     norm_est.setKSearch (100);
-    norm_est.compute (*pointcloudNormal);
+    norm_est.compute (*point_cloud_normal_voxelized);
     */
+
+
 
     pcl::MovingLeastSquares<PointT, PointTNormal> mls;
     //mls.setUpsamplingMethod(pcl::MovingLeastSquares<PointT, PointTNormal>::VOXEL_GRID_DILATION);
@@ -97,25 +103,25 @@ public:
     mls.setComputeNormals(true);
     mls.setInputCloud(pc_);
 
-    boost::shared_ptr<pcl::PointCloud<PointTNormal> > pointCloudWithNormal;
-    pointCloudWithNormal.reset(new pcl::PointCloud<PointTNormal>);
+    boost::shared_ptr<pcl::PointCloud<PointTNormal> > point_cloud_mls_normal;
+    point_cloud_mls_normal.reset(new pcl::PointCloud<PointTNormal>);
     std::cout << "start mls\n";
-    mls.process(*pointCloudWithNormal);
+    mls.process(*point_cloud_mls_normal);
 
     std::cout << "start voxel\n";
     pcl::VoxelGrid<PointTNormal> filter;
-    filter.setInputCloud(pointCloudWithNormal);
+    filter.setInputCloud(point_cloud_mls_normal);
     filter.setLeafSize(0.05, 0.05, 0.05);
-    filter.filter(*pointcloudNormal);
+    filter.filter(*point_cloud_normal_voxelized);
 
 
-    //pcl::copyPointCloud (*pc_, *pointcloudNormal);
+    //pcl::copyPointCloud (*pc_, *point_cloud_normal_voxelized);
     //pointcloud.reset();
 
     // Create the search method
     std::cout << "start kdtree\n";
     boost::shared_ptr<pcl::search::KdTree<PointTNormal> > tree2 (new pcl::search::KdTree<PointTNormal>);
-    tree2->setInputCloud (pointcloudNormal);
+    tree2->setInputCloud (point_cloud_normal_voxelized);
     // Initialize objects
 
 
@@ -130,7 +136,7 @@ public:
     //mc.setGridResolution(512,512,512);
     mc.setIsoLevel(isoLevel);   //ISO: must be between 0 and 1.0
     mc.setSearchMethod(tree2);
-    mc.setInputCloud(pointcloudNormal);
+    mc.setInputCloud(point_cloud_normal_voxelized);
     // Reconstruct
     mc.reconstruct (mesh);
     */
@@ -138,7 +144,7 @@ public:
     /*
     pcl::Poisson<pcl::PointNormal> poisson;
     poisson.setDepth(9);
-    poisson.setInputCloud(pointcloudNormal);
+    poisson.setInputCloud(point_cloud_normal_voxelized);
     poisson.setConfidence();
     poisson.reconstruct(mesh);
     */
@@ -153,7 +159,7 @@ public:
     greedy.setConsistentVertexOrdering(true);
 
     greedy.setSearchMethod(tree2);
-    greedy.setInputCloud(pointcloudNormal);
+    greedy.setInputCloud(point_cloud_normal_voxelized);
 
     std::cout << "start reconstruct\n";
     greedy.reconstruct(mesh_);
@@ -162,7 +168,9 @@ public:
     //pcl::io::saveVTKFile ("mesh.vtk", mesh);
 
     //surface_reconstruction_->setSearchMethod(tree2);
-    //surface_reconstruction_->setInputCloud(pointcloudNormal);
+    //surface_reconstruction_->setInputCloud(point_cloud_normal_voxelized);
+
+    std::cout << "Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
 
     pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
 
@@ -180,6 +188,8 @@ private:
   boost::shared_ptr<pcl::SurfaceReconstruction<pcl::PointNormal> > surface_reconstruction_;
 
   pcl::PolygonMesh mesh_;
+
+  pcl::StopWatch stop_watch_;
 
 
 
