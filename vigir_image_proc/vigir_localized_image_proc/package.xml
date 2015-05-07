@@ -10,9 +10,11 @@
   <build_depend>cv_bridge</build_depend>
   <build_depend>image_transport</build_depend>
   <build_depend>tf</build_depend>
+  <build_depend>vigir_perception_msgs</build_depend>
 
   <run_depend>sensor_msgs</run_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>tf</run_depend>
+  <run_depend>vigir_perception_msgs</run_depend>
 </package>

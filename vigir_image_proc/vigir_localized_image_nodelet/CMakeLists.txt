@@ -5,7 +5,7 @@ find_package(catkin REQUIRED COMPONENTS vigir_localized_image_proc flor_percepti
 
 ## Declare things to be passed to other projects
 catkin_package(
-    LIBRARIES ${PROJECT_NAME} #${PROJECT_NAME}_requester
+    LIBRARIES localized_image_nodelet
     CATKIN_DEPENDS vigir_localized_image_proc flor_perception_msgs nodelet camera_info_manager roscpp tf
 )
 
@@ -31,5 +31,9 @@ install(TARGETS localized_image_nodelet localized_image_node
 install(DIRECTORY plugin_descriptions
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   FILES_MATCHING PATTERN "*.*"
+)
 
+# install the launch file
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

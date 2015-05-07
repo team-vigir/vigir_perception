@@ -109,6 +109,10 @@ namespace vigir_image_proc{
 
     //image_req_sub_ = nh_out.subscribe("image_request",1, &CropDecimateNodelet::imageRequestCb, this);
     //ROS_INFO("DONE CREATING ADVERTISER AND SUBSRIBING TO IMAGE REQUEST SUB");
+
+    // For the moment, directly subscribe
+    image_transport::TransportHints hints("raw", ros::TransportHints(), getPrivateNodeHandle());
+    sub_ = it_in_->subscribeCamera(input_topic_in_camera_namespace_, queue_size_, &LocalizedImageNodelet::imageCb, this, hints);
   }
 
   // Handles (un)subscribing when clients (un)subscribe
@@ -245,7 +249,8 @@ namespace vigir_image_proc{
 
 }
 
-PLUGINLIB_DECLARE_CLASS (vigir_localized_image_nodelet, LocalizedImageNodelet, vigir_image_proc::LocalizedImageNodelet, nodelet::Nodelet);
+//PLUGINLIB_DECLARE_CLASS (vigir_localized_image_nodelet, LocalizedImageNodelet, vigir_image_proc::LocalizedImageNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS (vigir_image_proc::LocalizedImageNodelet, nodelet::Nodelet);
 
 
 
