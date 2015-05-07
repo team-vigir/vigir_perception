@@ -56,7 +56,7 @@ namespace vigir_image_proc{
     last_image_msg_ = image_msg;
     last_info_msg_ = info_msg;
         
-    ROS_INFO( "Image recieved, requested. Calling publish" );
+    ROS_INFO( "Image received, requested. Calling publish" );
 
     // If we didn't get a request yet, do nothing
     if (!last_request_){
@@ -66,7 +66,7 @@ namespace vigir_image_proc{
     // all images should be published if requested
     if( img_requested ) 
     {
-        ROS_INFO( "Image recieved, requested. Calling publish" );
+        ROS_INFO( "Image received, requested. Calling publish" );
         this->publishCroppedImage(false);
         img_requested = false;
     }
