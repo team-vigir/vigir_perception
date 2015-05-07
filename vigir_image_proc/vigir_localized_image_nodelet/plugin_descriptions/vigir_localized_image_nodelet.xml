@@ -1,0 +1,8 @@
+<!-- OpenNI driver nodelet publisher -->
+<library path="lib/liblocalized_image_nodelet">
+  <class name="vigir_localized_image_nodelet/LocalizedImageNodelet" type="vigir_image_proc::LocalizedImageNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+      Localized image nodelet
+    </description>
+  </class>
+</library>
