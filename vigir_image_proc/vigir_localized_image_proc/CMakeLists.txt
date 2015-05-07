@@ -3,7 +3,7 @@ project(vigir_localized_image_proc)
 
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
-find_package(catkin REQUIRED COMPONENTS sensor_msgs cv_bridge image_transport)
+find_package(catkin REQUIRED COMPONENTS sensor_msgs cv_bridge image_transport vigir_perception_msgs)
 
 SET(HEADERS
 include/${PROJECT_NAME}/localized_image_proc.h
@@ -19,7 +19,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${Boos
 catkin_package(
     LIBRARIES ${PROJECT_NAME}
     INCLUDE_DIRS include
-    CATKIN_DEPENDS sensor_msgs cv_bridge image_transport
+    CATKIN_DEPENDS sensor_msgs cv_bridge image_transport vigir_perception_msgs
     DEPENDS opencv boost 
 )
 
