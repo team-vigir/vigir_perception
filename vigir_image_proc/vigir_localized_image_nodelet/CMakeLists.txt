@@ -1,39 +1,54 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_localized_image_nodelet)
 
-find_package(catkin REQUIRED COMPONENTS vigir_localized_image_proc flor_perception_msgs nodelet camera_info_manager roscpp)
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED  cv_bridge image_geometry image_transport nodelet roscpp sensor_msgs dynamic_reconfigure tf tf_conversions vigir_localized_image_proc)
+#find_package(OpenCV REQUIRED core highgui imgproc)
+find_package(Boost REQUIRED COMPONENTS thread)
 
-## Declare things to be passed to other projects
+generate_dynamic_reconfigure_options(cfg/Rectify.cfg)
+
+
+## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    LIBRARIES localized_image_nodelet
-    CATKIN_DEPENDS vigir_localized_image_proc flor_perception_msgs nodelet camera_info_manager roscpp tf
+  CATKIN_DEPENDS image_geometry roscpp sensor_msgs tf tf_conversions vigir_localized_image_proc
+  DEPENDS OpenCV
+  INCLUDE_DIRS
+  LIBRARIES ${PROJECT_NAME}
 )
 
-include_directories(include)
-include_directories(${catkin_INCLUDE_DIRS})
+###########
+## Build ##
+###########
 
-#common commands for building c++ executables and libraries
-#Libraries
-add_library(localized_image_nodelet src/localized_image_nodelet.cpp)
-target_link_libraries(localized_image_nodelet ${catkin_LIBRARIES})
-add_dependencies(localized_image_nodelet ${catkin_EXPORTED_TARGETS})
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+# include_directories(include)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+#include_directories(include)
 
-# Executables
-add_executable(localized_image_node src/localized_image_node.cpp)
-target_link_libraries(localized_image_node localized_image_nodelet  ${catkin_LIBRARIES})
-add_dependencies(localized_image_node ${catkin_EXPORTED_TARGETS})
+# Nodelet library
+add_library(${PROJECT_NAME} src/nodelets/rectify.cpp)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
 
-install(TARGETS localized_image_nodelet localized_image_node
-   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(DIRECTORY plugin_descriptions
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  FILES_MATCHING PATTERN "*.*"
+install(FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 # install the launch file
 install(DIRECTORY launch
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+#install the launch files.
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  FILES_MATCHING PATTERN "*.launch"  
 )

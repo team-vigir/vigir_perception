@@ -1,6 +1,6 @@
-<library path="lib/libvigir_wide_angle_image_prok">
+<library path="lib/libvigir_localized_image_nodelet">
 
-  <class name="vigir_wide_angle_image_prok/rectify"
+  <class name="vigir_localized_image_nodelet/localized_image_provider"
          type="vigir_image_proc::LocalizedImageProvider"
 	 base_class_type="nodelet::Nodelet">
     <description>

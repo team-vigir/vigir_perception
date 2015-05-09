@@ -2,10 +2,10 @@
 
 <launch>
   
-  <node pkg="nodelet" type="nodelet" name="localized_image_nodelet_manager"  args="manager" respawn="true" />
+  <node pkg="nodelet" type="nodelet" name="localized_image_nodelet_manager"  args="manager" respawn="true" output="screen" />
   
-  <node pkg="nodelet" type="nodelet" name="left_camera_image_localized_nodelet" respawn="true"
-        args="load vigir_localized_image_nodelet/localized_image_nodelet localized_image_nodelet_manager" >
+  <node pkg="nodelet" type="nodelet" name="left_camera_image_localized_nodelet" respawn="true" output="screen"
+        args="load vigir_localized_image_nodelet/localized_image_provider localized_image_nodelet_manager" >
     <remap from="camera" to="multisense/camera/left/" />
     <remap from="camera_out" to="multisense/camera/left_localized" />
     <param name="input_topic_in_camera_namespace" value="image_rect_color" />
