@@ -50,6 +50,8 @@
   <build_depend>vigir_ocamlib_tools</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
+  <build_depend>vigir_localized_image_proc</build_depend>
+
 
   <run_depend>cv_bridge</run_depend>
   <run_depend>nodelet</run_depend>
@@ -61,6 +63,8 @@
   <run_depend>vigir_ocamlib_tools</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf_conversions</run_depend>
+  <run_depend>vigir_localized_image_proc</run_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
