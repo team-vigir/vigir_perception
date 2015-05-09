@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!--
+This launch file adds processing nodelets to the existing sa_camera_nodelet_manager.
+Meant for calibration, the cameras follow the robot endeffectors per default.
+-->
+
+<launch>
+
+  <node pkg="nodelet" type="nodelet" name="left_sa_rectify"
+        args="load vigir_wide_angle_image_proc/rectify sa_camera_nodelet_manager" output="screen">
+    <remap from="image_mono" to="/sa/left/image_raw" />
+    <!--<remap from="camera_info" to="/sa/left/camera_info" />-->
+    <remap from="image_rect_ns" to="/sa/left_calibrated/image_rect" />
+    <param name="calibration_text_file" value="$(find vigir_wide_angle_image_proc)/calib/calib_results_l_sa.txt" />
+
+    <param name="rectified_frame_id" value="/l_sa_virtual_camera" />
+    <param name="track_frame" value="l_hand" />
+    <param name="track_frame_y" value="0.2" />
+    <param name="focal_length" value="2.0" />
+     
+    <param name="use_tf_broadcaster" value="false" />
+    <param name="use_tf_listener" value="true" />
+    
+    <param name="pub_joint_states" value="true" />
+    <param name="yaw_joint_name" value="l_situational_awareness_camera_yaw_joint" />
+    <param name="pitch_joint_name" value="l_situational_awareness_camera_pitch_joint" />
+    <remap from="joint_states" to="l_sa_joint_states" />
+
+    <param name="parent_frame_id" value="/l_situational_awareness_camera_link_upright" />
+
+  </node>
+
+  <!--<node pkg="tf" type="static_transform_publisher" name="rotate_left_sa_optical_frame" args="0 0 0 0 0 1.5707963 /l_situational_awareness_camera_link /l_situational_awareness_camera_link_upright 100"/>-->
+
+
+  <node pkg="nodelet" type="nodelet" name="right_sa_rectify"
+        args="load vigir_wide_angle_image_proc/rectify sa_camera_nodelet_manager" output="screen">
+    <remap from="image_mono" to="/sa/right/image_raw" />
+    <!--<remap from="camera_info" to="/sa/left/camera_info" />-->
+    <remap from="image_rect_ns" to="/sa/right_calibrated/image_rect" />
+    <param name="calibration_text_file" value="$(find vigir_wide_angle_image_proc)/calib/calib_results_r_sa.txt" />
+
+    <param name="rectified_frame_id" value="/r_sa_virtual_camera" />
+    <param name="track_frame" value="r_hand" />
+    <param name="track_frame_y" value="-0.2" />
+    <param name="focal_length" value="2.0" />
+
+    <param name="use_tf_broadcaster" value="false" />
+    <param name="use_tf_listener" value="true" />
+        
+    <param name="pub_joint_states" value="true" />
+    <param name="yaw_joint_name" value="r_situational_awareness_camera_yaw_joint" />
+    <param name="pitch_joint_name" value="r_situational_awareness_camera_pitch_joint" />
+    <remap from="joint_states" to="r_sa_joint_states" />
+    
+    <param name="parent_frame_id" value="/r_situational_awareness_camera_link_upright" />
+
+  </node>
+
+  <!--<node pkg="tf" type="static_transform_publisher" name="rotate_right_sa_optical_frame" args="0 0 0 0 0 -1.5707963 /r_situational_awareness_camera_link /r_situational_awareness_camera_link_upright 100"/>-->
+
+</launch>
+

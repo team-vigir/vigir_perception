@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<!--
+This launch file adds processing nodelets to the existing sa_camera_nodelet_manager.
+-->
+  
+
+<launch>
+  
+  <include file="$(find vigir_wide_angle_image_proc)/launch/standalone_sa_camera_nodelets.launch" />
+  
+  <include file="$(find flor_bag_record)/launch/multisense_camera_all_throttled_play.launch" />
+  
+  
+</launch>
+

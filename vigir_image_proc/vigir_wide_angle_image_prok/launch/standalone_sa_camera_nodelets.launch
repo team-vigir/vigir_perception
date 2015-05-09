@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<!--
+This launch file creates a nodelet manager and adds the drivers for both SA cameras to it.
+-->
+
+<launch>
+  
+  <node pkg="nodelet" type="nodelet" name="standalone_nodelet"  args="manager" output="screen"/>
+
+  <node pkg="nodelet" type="nodelet" name="left_sa_rectify"
+        args="load vigir_wide_angle_image_prok/rectify standalone_nodelet" output="screen">
+    <remap from="image_mono" to="/sa/left/image_raw" />
+    <!--<remap from="camera_info" to="/sa/left/camera_info" />-->
+    <remap from="image_rect_ns" to="/sa/left_calibrated/image_rect" />
+    <param name="calibration_text_file" value="$(find vigir_wide_angle_image_proc)/calib/calib_results_l_sa.txt" />
+
+    <param name="rectified_frame_id" value="/l_sa_virtual_camera" />
+
+    <param name="use_tf_broadcaster" value="true" />
+    <param name="use_tf_listener" value="true" />
+    <param name="parent_frame_id" value="/l_situational_awareness_camera_link_upright" />
+
+  </node>
+
+  <!--
+  <node pkg="tf" type="static_transform_publisher" name="rotate_left_sa_optical_frame" args="0 0 0 1.57 0 0 l_situational_awareness_camera_optical_frame l_sa_camera_optical_frame_calibrated 100"/>
+  -->
+
+  <node pkg="tf" type="static_transform_publisher" name="rotate_left_sa_optical_frame" args="0 0 0 0 0 1.5707963 /l_situational_awareness_camera_link /l_situational_awareness_camera_link_upright 100"/>
+
+  <!--
+  <node pkg="tf" type="static_transform_publisher" name="left_virtual_to_optical" args="0 0 0 -1.5707963 0 -1.5707963 /l_situational_awareness_virtual_camera /l_situational_awareness_virtual_camera_optical_frame 100"/>
+  -->
+
+ <!--
+  <node pkg="nodelet" type="nodelet" name="left_sa_rectify"
+        args="load pgr_camera/camera_nodelet sa_camera_nodelet_manager" output="screen">
+    <param name="serial" value="12491354" />
+    <param name="frame_id" type="str" value="r_situational_awareness_camera_optical_frame" />
+    <remap from="/right_sa_camera_driver/image" to="/sa/right/image_raw" />
+    <remap from="camera_info" to="/sa/right/camera_info" />
+  </node>
+
+ -->
+
+</launch>
+
