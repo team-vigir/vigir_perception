@@ -8,7 +8,7 @@ find_package(catkin REQUIRED  cv_bridge image_geometry image_transport nodelet r
 #find_package(OpenCV REQUIRED core highgui imgproc)
 find_package(Boost REQUIRED COMPONENTS thread)
 
-generate_dynamic_reconfigure_options(cfg/Rectify.cfg)
+#generate_dynamic_reconfigure_options(cfg/Rectify.cfg)
 
 
 ## DEPENDS: system dependencies of this project that dependent projects also need
