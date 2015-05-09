@@ -108,7 +108,7 @@ void LocalizedImageProvider::onInit()
   // Read parameters
   //private_nh.param("queue_size", queue_size_, 5);
   //private_nh.param("max_video_framerate", max_video_framerate_, 100.0);
-  //private_nh.param("input_topic_in_camera_namespace", input_topic_in_camera_namespace_, std::string("image_raw"));
+  private_nh.param("input_topic_in_camera_namespace", input_topic_in_camera_namespace_, std::string("image_rect"));
   ROS_INFO("Subscribing to topic %s in camera namespace", input_topic_in_camera_namespace_.c_str());
 
   // Monitor whether anyone is subscribed to the output
