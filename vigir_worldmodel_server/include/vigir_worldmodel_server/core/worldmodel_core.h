@@ -41,6 +41,7 @@
 
 #include <vigir_worldmodel_server/sensors/point_cloud_subscription_adapter.h>
 
+#include <vigir_worldmodel_server/state/transform_service_provider.h>
 #include <vigir_worldmodel_server/state/state_provider.h>
 #include <vigir_worldmodel_server/state/tf_pose_republisher.h>
 
@@ -119,6 +120,8 @@ namespace vigir_worldmodel{
                                                                                   "/l_hand"
                                                                                   )));
       state_provider_->start();
+
+      transform_service_provider_.reset(new TransformServiceProvider(tf_listener_));
 
     }
 
@@ -226,6 +229,8 @@ namespace vigir_worldmodel{
     boost::shared_ptr<WorldmodelCommunication> communication_;
 
     boost::shared_ptr<StateProvider> state_provider_;
+
+    boost::shared_ptr<TransformServiceProvider> transform_service_provider_;
 
     //Visualizers (for debugging during development)
     OctomapVisualization octo_marker_vis_;

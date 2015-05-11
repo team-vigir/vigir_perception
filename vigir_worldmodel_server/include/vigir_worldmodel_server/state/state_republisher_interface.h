@@ -35,7 +35,7 @@ class StateRepublisherInterface
 {
 public:
 
-  virtual void run(const ros::Time& time) = 0;
+  virtual void execute(const ros::Time& time) = 0;
 ;
 };
 

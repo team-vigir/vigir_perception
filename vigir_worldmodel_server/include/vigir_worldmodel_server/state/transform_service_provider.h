@@ -26,59 +26,80 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef STATE_PROVIDER_H__
-#define STATE_PROVIDER_H__
+#ifndef TRANSFORM_SERVICE_PROVIDER_H__
+#define TRANSFORM_SERVICE_PROVIDER_H__
 
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
+#include <vigir_perception_msgs/GetPoseInFrame.h>
 
-#include <vigir_worldmodel_server/state/state_republisher_interface.h>
+
 
 namespace vigir_worldmodel{
 
-  class StateProvider
+  class TransformServiceProvider
   {
   public:
-    StateProvider()
-    {}
-
-    ~StateProvider()
-    {}
-
-    void addStateRepublisher(boost::shared_ptr<StateRepublisherInterface> republisher)
+    TransformServiceProvider(const boost::shared_ptr<tf::TransformListener>& tf_listener)
+      : tf_listener_(tf_listener)
     {
-      republishers_.push_back(republisher);
+      nh_.reset(new ros::NodeHandle("~"));
+      nh_->setCallbackQueue(&callback_queue_);
+      this->loop_thread_.reset(new boost::thread( boost::bind( &TransformServiceProvider::serviceCallbackQueue,this ) ));
+      
+      transform_lookup_service_ = nh_->advertiseService("get_pose_in_frame_service", &TransformServiceProvider::getPoseInFrameServiceCb, this);
+
     }
 
-    void start(double loop_rate = 30.0)
+    ~TransformServiceProvider()
+    {}
+
+    void serviceCallbackQueue()
     {
-      loop_thread_.reset(new boost::thread(boost::bind(&StateProvider::loopFunction, this, loop_rate)));
+      static const double timeout = 0.003;
+
+      while (this->nh_->ok()){
+        this->callback_queue_.callAvailable(ros::WallDuration(timeout));
+      }
     }
 
-    void loopFunction(double loop_rate)
+    bool getPoseInFrameServiceCb(vigir_perception_msgs::GetPoseInFrame::Request  &req,
+                                 vigir_perception_msgs::GetPoseInFrame::Response &res )
     {
-      ros::Rate r(loop_rate);
 
-      ros::Time time = ros::Time(0);
+      tf::Stamped<tf::Pose> tf_pose_req;
 
-      while(ros::ok())
+      tf::poseStampedMsgToTF(req.pose, tf_pose_req);
+
+      if (tf_listener_->waitForTransform(req.target_frame,
+                                         req.pose.header.frame_id,
+                                         req.pose.header.stamp,
+                                         ros::Duration(0.5)))
       {
-        size_t size = republishers_.size();
+        tf::Stamped<tf::Pose> tf_pose_target;
+        tf_listener_->transformPose(req.target_frame, tf_pose_req, tf_pose_target);
 
-        for (size_t i = 0; i < size; ++i){
-          republishers_[i]->execute(time);
-        }
-     
-        r.sleep();
+        tf::poseStampedTFToMsg(tf_pose_target, res.transformed_pose);
+
+        return true;
+
+      }else{
+        ROS_WARN("Timed out waiting for transform from %s to %s",
+                 req.pose.header.frame_id.c_str(),
+                 req.target_frame.c_str());
+        return false;
       }
     }
 
   protected:
-
+    boost::shared_ptr<ros::NodeHandle> nh_;
     boost::shared_ptr<boost::thread> loop_thread_;
+    ros::CallbackQueue callback_queue_;
 
-    std::vector<boost::shared_ptr<StateRepublisherInterface> > republishers_;
+    ros::ServiceServer transform_lookup_service_;
+
+    boost::shared_ptr<tf::TransformListener> tf_listener_;
   };
 
 }
