@@ -75,12 +75,18 @@ public:
     tf_transformer_.setTransform(tf_start);
     tf_transformer_.setTransform(tf_end);
 
+    int channel_options = laser_geometry::channel_option::Intensity;
+
+    if (scan_.intensities.size() == 0){
+      channel_options = laser_geometry::channel_option::None;
+    }
+
     laser_proj_.transformLaserScanToPointCloud(tf_start.frame_id_,
                                               scan_,
                                               cloud_out,
                                               tf_transformer_,
                                               scan_.range_max,
-                                              laser_geometry::channel_option::Intensity);
+                                              channel_options);
 
     scan_.ranges = scan_in.processed_scan.ranges[vigir_perception_msgs::FilteredLocalizedLaserScan::SCAN_SELF_FILTERED].echoes;
 
@@ -89,7 +95,7 @@ public:
                                               cloud_self_filtered_out,
                                               tf_transformer_,
                                               scan_.range_max,
-                                              laser_geometry::channel_option::Intensity);
+                                              channel_options);
 
     return true;
   }
