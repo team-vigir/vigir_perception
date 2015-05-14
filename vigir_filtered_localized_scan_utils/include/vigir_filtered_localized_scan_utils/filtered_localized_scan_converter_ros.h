@@ -52,9 +52,11 @@ public:
     ROS_INFO("FilteredLocalizedScanConverter using queue size %d", p_scan_queue_size_);
 
     cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("cloud_out", 1, false);
+    ROS_INFO("Published cloud");
     cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("cloud_self_filtered_out", 1, false);
+    ROS_INFO("Published self filtered cloud");
     scan_sub_ = pnh.subscribe("scan", p_scan_queue_size_, &FilteredLocalizedScanConversionRos::scanCallback, this);
-
+    
   }
 
   void scanCallback(const vigir_perception_msgs::FilteredLocalizedLaserScan& scan_in)

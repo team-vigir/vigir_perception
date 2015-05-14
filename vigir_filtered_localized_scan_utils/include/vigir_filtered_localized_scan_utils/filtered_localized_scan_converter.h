@@ -96,6 +96,8 @@ public:
                                               tf_transformer_,
                                               scan_.range_max,
                                               channel_options);
+                                              
+    tf_transformer_.clear();
 
     return true;
   }
