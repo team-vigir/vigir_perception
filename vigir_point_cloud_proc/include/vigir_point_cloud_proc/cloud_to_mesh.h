@@ -202,7 +202,7 @@ public:
 
     std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
 
-    pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
+    //pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
 
 
   }
