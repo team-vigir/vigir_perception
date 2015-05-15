@@ -85,6 +85,12 @@ public:
 
     stop_watch_.reset();
 
+    if (!pc_.get())
+      return false;
+
+    if (!(pc_->size() > 200))
+      return false;
+
     boost::shared_ptr<pcl::PointCloud<PointTNormal> > point_cloud_normal_voxelized (new pcl::PointCloud<PointTNormal> ());
 
     /*
@@ -201,6 +207,8 @@ public:
     //surface_reconstruction_->setInputCloud(point_cloud_normal_voxelized);
 
     std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
+
+    return true;
 
     //pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
 

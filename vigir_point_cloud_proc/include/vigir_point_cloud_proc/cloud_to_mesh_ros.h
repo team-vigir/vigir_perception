@@ -79,41 +79,30 @@ public:
 
     cloud_to_mesh_.setInput(pc);
 
-    cloud_to_mesh_.computeMesh();
-
-    if (marker_pub_.getNumSubscribers() > 0){
-      visualization_msgs::Marker mesh_marker;
-
-      meshToMarkerMsg(cloud_to_mesh_.getMesh() ,mesh_marker);
-      marker_pub_.publish(mesh_marker);
-    }
-
-    if (shape_pub_.getNumSubscribers() > 0){
-      shape_msgs::Mesh shape_mesh;
-
-      meshToShapeMsg(cloud_to_mesh_.getMesh() ,shape_mesh);
-      shape_pub_.publish(shape_mesh);
-    }
-
-
-
-    /*
-    if (converter.convertScanToClouds(scan_in, cloud_out_, cloud_self_filtered_out))
+    if (cloud_to_mesh_.computeMesh())
     {
-      cloud_pub_.publish(cloud_out_);
-      cloud_self_filtered_pub_.publish(cloud_self_filtered_out);
-    }else{
-      ROS_WARN("Could not convert scan to cloud, skipping.");
-    }
-    */
 
+      if (marker_pub_.getNumSubscribers() > 0){
+        visualization_msgs::Marker mesh_marker;
+
+        meshToMarkerMsg(cloud_to_mesh_.getMesh() ,mesh_marker);
+        marker_pub_.publish(mesh_marker);
+      }
+
+      if (shape_pub_.getNumSubscribers() > 0){
+        shape_msgs::Mesh shape_mesh;
+
+        meshToShapeMsg(cloud_to_mesh_.getMesh() ,shape_mesh);
+        shape_pub_.publish(shape_mesh);
+      }
+    }else{
+      ROS_WARN("Could not generate mesh for point cloud!");
+    }
   }
 
 
 private:
-  //FilteredLocalizedScanConversion converter;
-  //sensor_msgs::LaserScan scan_;
-  //laser_geometry::LaserProjection laser_proj_;
+
   ros::Subscriber cloud_sub_;
   ros::Publisher marker_pub_;
   ros::Publisher shape_pub_;
