@@ -14,6 +14,7 @@
     <param name="octomap_save_folder" value="$(find vigir_worldmodel_server)/maps" />
     <param name="use_external_octomap" value="true" />
     <remap from="~/octomap_external_update" to="/move_group/octomap"/>
+    <remap from="syscommand" to="/flor/worldmodel/syscommand" />
   </node>
   
 </launch>
