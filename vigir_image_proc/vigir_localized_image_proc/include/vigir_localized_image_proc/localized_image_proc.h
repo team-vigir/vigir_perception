@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (c) 2013, Stefan Kohlbrecher, TU Darmstadt
+// Copyright (c) 2012, Stefan Kohlbrecher, TU Darmstadt
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -26,61 +26,41 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef STATE_PROVIDER_H__
-#define STATE_PROVIDER_H__
+#ifndef VIGIR_LOCALIZED_IMAGE_PROC_H__
+#define VIGIR_LOCALIZED_IMAGE_PROC_H__
 
-#include <ros/ros.h>
+#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/Image.h>
 
-#include <geometry_msgs/PoseStamped.h>
+#include <vigir_perception_msgs/LocalizedImage.h>
 
-#include <vigir_worldmodel_server/state/state_republisher_interface.h>
+#include <tf/tf.h>
 
-namespace vigir_worldmodel{
+//Forward declare cv stuff in header
+//namespace cv{
+//  class Mat;
+//}
 
-  class StateProvider
-  {
-  public:
-    StateProvider()
-    {}
+namespace vigir_image_proc{
 
-    ~StateProvider()
-    {}
+class LocalizedImageProc{
+public:
 
-    void addStateRepublisher(boost::shared_ptr<StateRepublisherInterface> republisher)
-    {
-      republishers_.push_back(republisher);
-    }
+  LocalizedImageProc(boost::shared_ptr<tf::Transformer> transformer, const std::string target_frame = "world");
 
-    void start(double loop_rate = 30.0)
-    {
-      loop_thread_.reset(new boost::thread(boost::bind(&StateProvider::loopFunction, this, loop_rate)));
-    }
+  bool processImage(const sensor_msgs::ImageConstPtr& image_msg,
+                    const sensor_msgs::CameraInfoConstPtr& info_msg,
+                    vigir_perception_msgs::LocalizedImagePtr& localized_image_msg_out);                    
 
-    void loopFunction(double loop_rate)
-    {
-      ros::Rate r(loop_rate);
+protected:
+  boost::shared_ptr<tf::Transformer> transformer_;
+  std::string target_frame_;
 
-      ros::Time time = ros::Time(0);
 
-      while(ros::ok())
-      {
-        size_t size = republishers_.size();
-
-        for (size_t i = 0; i < size; ++i){
-          republishers_[i]->execute(time);
-        }
-     
-        r.sleep();
-      }
-    }
-
-  protected:
-
-    boost::shared_ptr<boost::thread> loop_thread_;
-
-    std::vector<boost::shared_ptr<StateRepublisherInterface> > republishers_;
-  };
+};
 
 }
 
 #endif
+

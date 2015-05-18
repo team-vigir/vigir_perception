@@ -400,8 +400,8 @@ namespace vigir_worldmodel{
 
       std::cout << "range image num points: " << range_image->size() << "\n";
 
-      static pcl::visualization::RangeImageVisualizer range_image_widget ("Range image");
-      range_image_widget.showRangeImage (*range_image);
+      //static pcl::visualization::RangeImageVisualizer range_image_widget ("Range image");
+      //range_image_widget.showRangeImage (*range_image);
     }
 
     bool hasFrame(const std::string& frame_id) const

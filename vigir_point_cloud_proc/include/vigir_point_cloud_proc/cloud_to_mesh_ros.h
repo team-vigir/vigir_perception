@@ -26,63 +26,93 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef VIGIR_FILTERED_LOCALIZED_SCAN_CONVERTER_ROS_H_
-#define VIGIR_FILTERED_LOCALIZED_SCAN_CONVERTER_ROS_H_
+#ifndef VIGIR_CLOUD_TO_MESH_ROS_H_
+#define VIGIR_CLOUD_TO_MESH_ROS_H_
 
 #include <ros/ros.h>
-#include <vigir_filtered_localized_scan_utils/filtered_localized_scan_converter.h>
+#include <sensor_msgs/PointCloud2.h>
 
-namespace vigir_filtered_localized_scan_utils
+#include <visualization_msgs/Marker.h>
+#include <shape_msgs/Mesh.h>
+
+#include <pcl/point_cloud.h>
+#include <pcl/PCLPointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <vigir_point_cloud_proc/cloud_to_mesh.h>
+#include <vigir_point_cloud_proc/mesh_conversions.h>
+//#include <vigir_filtered_localized_scan_utils/filtered_localized_scan_converter.h>
+
+namespace vigir_point_cloud_proc
 {
 
 /**
- * @brief The FilteredLocalizedScanConversionRos class provides
- * a ROS(topic) interface for converting FilteredLocalizedLaserScan
- * messages to point cloud representations.
+ * @brief The CloudToMeshRos class provides
+ * a ROS(topic) interface for converting point clouds
+ * messages to mesh representations.
  */
-class FilteredLocalizedScanConversionRos
+template <typename PointT>
+class CloudToMeshRos
 {
 public:
-  FilteredLocalizedScanConversionRos()
+  CloudToMeshRos()
   {
     ros::NodeHandle pnh("~");
 
-    pnh.param("scan_sub_queue_size", p_scan_queue_size_, 1);
+    pnh.param("cloud_sub_queue_size", p_cloud_queue_size_, 1);
 
-    ROS_INFO("FilteredLocalizedScanConverter using queue size %d", p_scan_queue_size_);
+    ROS_INFO("CloudToMeshRos using queue size %d", p_cloud_queue_size_);
 
-    cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("cloud_out", 1, false);
-    ROS_INFO("Published cloud");
-    cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("cloud_self_filtered_out", 1, false);
-    ROS_INFO("Published self filtered cloud");
-    scan_sub_ = pnh.subscribe("scan", p_scan_queue_size_, &FilteredLocalizedScanConversionRos::scanCallback, this);
-    
+    marker_pub_ = pnh.advertise<visualization_msgs::Marker>("mesh_marker", 1, false);
+    shape_pub_  = pnh.advertise<shape_msgs::Mesh>("mesh_shape", 1, false);
+
+    cloud_sub_ = pnh.subscribe("cloud", p_cloud_queue_size_, &CloudToMeshRos::cloudCallback, this);
+
+    cloud_to_mesh_.setVoxelFilterSize(0.025);
+
   }
 
-  void scanCallback(const vigir_perception_msgs::FilteredLocalizedLaserScan& scan_in)
+  void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_in)
   {
-    if (converter.convertScanToClouds(scan_in, cloud_out_, cloud_self_filtered_out))
+    boost::shared_ptr<pcl::PointCloud<PointT> > pc (new pcl::PointCloud<PointT>());
+    pcl::fromROSMsg(*cloud_in, *pc);
+
+    cloud_to_mesh_.setInput(pc);
+
+    if (cloud_to_mesh_.computeMesh())
     {
-      cloud_pub_.publish(cloud_out_);
-      cloud_self_filtered_pub_.publish(cloud_self_filtered_out);
+
+      if (marker_pub_.getNumSubscribers() > 0){
+        visualization_msgs::Marker mesh_marker;
+
+        meshToMarkerMsg(cloud_to_mesh_.getMesh() ,mesh_marker);
+        marker_pub_.publish(mesh_marker);
+      }
+
+      if (shape_pub_.getNumSubscribers() > 0){
+        shape_msgs::Mesh shape_mesh;
+
+        meshToShapeMsg(cloud_to_mesh_.getMesh() ,shape_mesh);
+        shape_pub_.publish(shape_mesh);
+      }
     }else{
-      ROS_WARN("Could not convert scan to cloud, skipping.");
+      ROS_WARN("Could not generate mesh for point cloud!");
     }
   }
 
 
 private:
-  FilteredLocalizedScanConversion converter;
-  //sensor_msgs::LaserScan scan_;
-  //laser_geometry::LaserProjection laser_proj_;
-  ros::Subscriber scan_sub_;
-  ros::Publisher cloud_pub_;
-  ros::Publisher cloud_self_filtered_pub_;
+
+  ros::Subscriber cloud_sub_;
+  ros::Publisher marker_pub_;
+  ros::Publisher shape_pub_;
 
   sensor_msgs::PointCloud2 cloud_out_;
   sensor_msgs::PointCloud2 cloud_self_filtered_out;
 
-  int p_scan_queue_size_;
+  int p_cloud_queue_size_;
+
+  CloudToMesh<PointT, pcl::PointNormal> cloud_to_mesh_;
 
 };
 

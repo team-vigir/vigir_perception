@@ -41,6 +41,7 @@
 
 #include <vigir_worldmodel_server/sensors/point_cloud_subscription_adapter.h>
 
+#include <vigir_worldmodel_server/state/transform_service_provider.h>
 #include <vigir_worldmodel_server/state/state_provider.h>
 #include <vigir_worldmodel_server/state/tf_pose_republisher.h>
 
@@ -77,7 +78,7 @@ namespace vigir_worldmodel{
       pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
 
 
-      waitForTf();
+      waitForTf(pnh_in);
 
       octomap_.reset(new WorldmodelOctomap(p_root_frame_));
 
@@ -119,6 +120,8 @@ namespace vigir_worldmodel{
                                                                                   "/l_hand"
                                                                                   )));
       state_provider_->start();
+
+      transform_service_provider_.reset(new TransformServiceProvider(tf_listener_));
 
     }
 
@@ -172,24 +175,35 @@ namespace vigir_worldmodel{
 
     void octomapExternalUpdateCallback(const octomap_msgs::OctomapConstPtr& msg)
     {
-      if (!octomap_->updateOctomap(*msg))
-        ROS_WARN("External octomap update failed!");
+      //if (!octomap_->updateOctomap(*msg))
+      //  ROS_WARN("External octomap update failed!");
+
+      octomap_->updateOctomap(*msg);
     }
 
 
-    void waitForTf()
+    void waitForTf(ros::NodeHandle& pnh)
     {
       ros::WallTime start = ros::WallTime::now();
       ROS_INFO("Waiting for tf to become available");
+
+      pnh.param("required_frames", p_required_frames_list_, std::string(""));
+      boost::algorithm::split(required_frames_list_, p_required_frames_list_, boost::is_any_of("\t "));
+
 
       bool transforms_successful = false;
 
       while (!transforms_successful){
 
-        transforms_successful =
-            tf_listener_->waitForTransform(p_root_frame_, "/head_hokuyo_frame", ros::Time(0), ros::Duration(10.0)) &&
-            tf_listener_->waitForTransform(p_root_frame_, "/l_hand", ros::Time(0), ros::Duration(10.0)) &&
-            tf_listener_->waitForTransform(p_root_frame_, "/r_hand", ros::Time(0), ros::Duration(10.0));
+        bool success = true;
+
+        for (size_t i = 0; i < required_frames_list_.size(); ++i){
+          success = success && tf_listener_->waitForTransform(p_root_frame_, required_frames_list_[i], ros::Time(0), ros::Duration(10.0));
+          if(!success)
+            ROS_WARN("Worldmodel server waiting for (%s) tf...", required_frames_list_[i].c_str());
+        }
+
+        transforms_successful = success;
       }
       ros::WallTime end = ros::WallTime::now();
       ROS_INFO("Finished waiting for tf, waited %f seconds", (end-start).toSec());
@@ -216,11 +230,15 @@ namespace vigir_worldmodel{
 
     boost::shared_ptr<StateProvider> state_provider_;
 
+    boost::shared_ptr<TransformServiceProvider> transform_service_provider_;
+
     //Visualizers (for debugging during development)
     OctomapVisualization octo_marker_vis_;
     PointCloudVisualization point_cloud_vis_;
 
     std::string p_root_frame_;
+    std::string p_required_frames_list_;
+    std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
 
     ros::Timer vis_timer_;

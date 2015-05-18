@@ -71,7 +71,7 @@ public:
   }
 
 
-  void run(const ros::Time& time)
+  void execute(const ros::Time& time)
   {
     // Always get latest transform
     pose_source_.header.stamp = time;
@@ -101,7 +101,6 @@ public:
 
   ros::Publisher pose_pub_;
 
-;
 };
 
 #endif

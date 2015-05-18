@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (c) 2013, Stefan Kohlbrecher, TU Darmstadt
+// Copyright (c) 2012, Stefan Kohlbrecher, TU Darmstadt
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -26,61 +26,62 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef STATE_PROVIDER_H__
-#define STATE_PROVIDER_H__
+#include <boost/make_shared.hpp>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
-#include <ros/ros.h>
+#include <vigir_localized_image_proc/localized_image_proc.h>
 
-#include <geometry_msgs/PoseStamped.h>
+namespace vigir_image_proc {
 
-#include <vigir_worldmodel_server/state/state_republisher_interface.h>
+using namespace cv_bridge; // CvImage, toCvShare
 
-namespace vigir_worldmodel{
 
-  class StateProvider
+LocalizedImageProc::LocalizedImageProc(boost::shared_ptr<tf::Transformer> transformer, const std::string target_frame)
+  : transformer_(transformer)
+  , target_frame_(target_frame)
+{}
+
+
+bool LocalizedImageProc::processImage(
+                      const sensor_msgs::ImageConstPtr& image_msg,
+                      const sensor_msgs::CameraInfoConstPtr& info_msg,
+                      vigir_perception_msgs::LocalizedImagePtr& localized_image_msg_out)
+{
+
+  if (!transformer_.get()){
+    ROS_ERROR("Transformer in localized image proc is Null!");
+    return false;
+  }
+
+  tf::StampedTransform transform_camera_to_world;
+
+  try
   {
-  public:
-    StateProvider()
-    {}
-
-    ~StateProvider()
-    {}
-
-    void addStateRepublisher(boost::shared_ptr<StateRepublisherInterface> republisher)
+    if(transformer_->waitForTransform(target_frame_, image_msg->header.frame_id, image_msg->header.stamp, ros::Duration(0.5)))
     {
-      republishers_.push_back(republisher);
+      transformer_->lookupTransform(target_frame_, image_msg->header.frame_id, image_msg->header.stamp, transform_camera_to_world);
     }
+  }
+  catch (tf::TransformException& ex)
+  {
+    ROS_ERROR_STREAM("Transform error of sensor data: " << ex.what() << "; quitting callback");
+    return false;
+  }
 
-    void start(double loop_rate = 30.0)
-    {
-      loop_thread_.reset(new boost::thread(boost::bind(&StateProvider::loopFunction, this, loop_rate)));
-    }
+  localized_image_msg_out.reset(new vigir_perception_msgs::LocalizedImage());
 
-    void loopFunction(double loop_rate)
-    {
-      ros::Rate r(loop_rate);
+  // Set transform for outgoing message
+  tf::transformTFToMsg(transform_camera_to_world, localized_image_msg_out->camera_pose_world_frame);
 
-      ros::Time time = ros::Time(0);
+  //Set image message
+  localized_image_msg_out->image = *image_msg;
 
-      while(ros::ok())
-      {
-        size_t size = republishers_.size();
+  //Set camera info
+  localized_image_msg_out->camera_info = *info_msg;
 
-        for (size_t i = 0; i < size; ++i){
-          republishers_[i]->execute(time);
-        }
-     
-        r.sleep();
-      }
-    }
-
-  protected:
-
-    boost::shared_ptr<boost::thread> loop_thread_;
-
-    std::vector<boost::shared_ptr<StateRepublisherInterface> > republishers_;
-  };
+  return true;
 
 }
+} // namespace vigir_image_proc
 
-#endif
