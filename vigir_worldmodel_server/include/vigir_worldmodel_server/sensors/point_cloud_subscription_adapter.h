@@ -73,9 +73,12 @@ public:
         pcl::fromPCLPointCloud2(pcl_pc, cloud);
         */
 
+      if (!point_cloud_aggregator_->hasDataWithTimestamp(stereo_cloud->header.stamp))
+      {
         boost::shared_ptr<pcl::PointCloud<PointT> > pc_ (new pcl::PointCloud<PointT>());
         pcl::fromROSMsg(*stereo_cloud, *pc_);
         point_cloud_aggregator_->addCloud(pc_);
+      }
     }
 
 

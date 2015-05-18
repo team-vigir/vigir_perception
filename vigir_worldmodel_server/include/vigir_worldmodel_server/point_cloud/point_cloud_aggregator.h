@@ -144,8 +144,8 @@ namespace vigir_worldmodel{
 
       //if (cloud_stamp > last_insertion_){
         //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
-      //pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
-      pointclouds_[cloud_stamp] = PointCloudContainer<PointT> (cloud, transforms);
+      pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
+      //pointclouds_[cloud_stamp] = PointCloudContainer<PointT> (cloud, transforms);
       last_insertion_ = cloud_stamp;
       //}
       //else{
@@ -411,6 +411,16 @@ namespace vigir_worldmodel{
 
       //static pcl::visualization::RangeImageVisualizer range_image_widget ("Range image");
       //range_image_widget.showRangeImage (*range_image);
+    }
+
+    bool hasDataWithTimestamp(const ros::Time& time)
+    {
+        boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
+
+        if (pointclouds_.find(time) != pointclouds_.end())
+          return true;
+
+        return false;
     }
 
     bool hasFrame(const std::string& frame_id) const
