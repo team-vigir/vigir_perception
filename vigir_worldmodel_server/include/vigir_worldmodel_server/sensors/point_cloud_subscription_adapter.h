@@ -43,7 +43,7 @@ template <typename PointT>
 class PointCloudSubscriptionAdapter{
 public:
 
-    PointCloudSubscriptionAdapter(boost::shared_ptr<PointCloudAggregator<PointT> >& point_cloud_aggregator,
+    PointCloudSubscriptionAdapter(boost::shared_ptr<PointCloudAggregator<PointT> > point_cloud_aggregator,
                                   const std::string topic_name,
                                   int queue_size = 40)
         : point_cloud_aggregator_(point_cloud_aggregator)

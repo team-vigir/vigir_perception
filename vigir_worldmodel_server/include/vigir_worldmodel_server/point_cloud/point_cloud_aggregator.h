@@ -78,14 +78,14 @@ namespace vigir_worldmodel{
   {
   public:
 
-    PointCloudAggregator(const boost::shared_ptr<tf::TransformListener>& tf_listener, int circular_buffer_size = 4000)
+    PointCloudAggregator(const boost::shared_ptr<tf::TransformListener> tf_listener, int circular_buffer_size = 4000)
     : tf_listener_(tf_listener)
     , max_storage(circular_buffer_size)
     {
       //Need to add a proper pointcloud to stamp comparison object
       boost::shared_ptr<pcl::PointCloud<PointT> > pc (new pcl::PointCloud<PointT>());
       std::vector<tf::StampedTransform> tmp;
-      tmp_comparison_container_ = PointCloudContainer<PointT>(pc, tmp);
+      //tmp_comparison_container_ = PointCloudContainer<PointT>(pc, tmp);
 
       //pointclouds_ = boost::circular_buffer<PointCloudContainer<PointT> >(max_storage);
 
@@ -115,12 +115,19 @@ namespace vigir_worldmodel{
 
     void addCloud(boost::shared_ptr<pcl::PointCloud<PointT> > cloud)
     {
+      ros::Time cloud_stamp = pcl_conversions::fromPCL(cloud->header.stamp);
+
+      {
+        boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
+
+        if (pointclouds_.find(cloud_stamp) != pointclouds_.end())
+          return;
+      }
+
       size_t number_of_frames = frames_list_.size();
 
       std::vector<tf::StampedTransform> transforms;
       transforms.resize(number_of_frames);
-
-      ros::Time cloud_stamp = pcl_conversions::fromPCL(cloud->header.stamp);
 
       try {
         tf_listener_->waitForTransform(frames_list_[0], cloud->header.frame_id, cloud_stamp, ros::Duration(0.5));
@@ -135,14 +142,16 @@ namespace vigir_worldmodel{
 
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
-      if (cloud_stamp > last_insertion_){
+      //if (cloud_stamp > last_insertion_){
         //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
-        pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
-        last_insertion_ = cloud_stamp;
-      }else{
-        ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
-                 //Difference: %ul nanoseconds", cloud->header.stamp-last_insertion_ );
-      }
+      //pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
+      pointclouds_[cloud_stamp] = PointCloudContainer<PointT> (cloud, transforms);
+      last_insertion_ = cloud_stamp;
+      //}
+      //else{
+      //  ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
+      //           //Difference: %ul nanoseconds", cloud->header.stamp-last_insertion_ );
+      //}
     }
 
     bool getAggregateCloud(const boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, size_t aggregation_size= 500)
@@ -442,7 +451,7 @@ namespace vigir_worldmodel{
     std::map<ros::Time, PointCloudContainer<PointT> > pointclouds_;
     size_t max_storage;
 
-    PointCloudContainer<PointT> tmp_comparison_container_;
+    //PointCloudContainer<PointT> tmp_comparison_container_;
 
     std::map<std::string, size_t> frame_to_id_map_;
     std::map<size_t, std::string> id_to_frame_map_;
