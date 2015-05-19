@@ -194,6 +194,12 @@ namespace vigir_worldmodel{
       ROS_INFO("Waiting for tf to become available");
 
       pnh.param("required_frames", p_required_frames_list_, std::string(""));
+
+      if (p_required_frames_list_.empty()){
+        ROS_WARN("No list of tf frames to wait for specified! Could lead to transform errors during startup.");
+        return;
+      }
+
       boost::algorithm::split(required_frames_list_, p_required_frames_list_, boost::is_any_of("\t "));
 
 
