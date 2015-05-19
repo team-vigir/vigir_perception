@@ -51,7 +51,8 @@ class FilteredLocalizedScanConversion
 public:
   bool convertScanToClouds(const vigir_perception_msgs::FilteredLocalizedLaserScan& scan_in,
                            sensor_msgs::PointCloud2& cloud_out,
-                           sensor_msgs::PointCloud2& cloud_self_filtered_out)
+                           sensor_msgs::PointCloud2& cloud_self_filtered_out,
+                           bool fill_intensity_if_not_available = false)
   {
     vigir_perception_msgs::convertFilteredToLaserScan(scan_in,
                                                       vigir_perception_msgs::FilteredLocalizedLaserScan::SCAN_PREPROCESSED,
@@ -78,7 +79,15 @@ public:
     int channel_options = laser_geometry::channel_option::Intensity;
 
     if (scan_.intensities.size() == 0){
-      channel_options = laser_geometry::channel_option::None;
+      if (fill_intensity_if_not_available){
+        scan_.intensities.resize(scan_.ranges.size());
+
+        for (size_t i = 0; i < scan_.intensities.size(); ++i){
+          scan_.intensities[i] = 1000.0f;
+        }
+      }else{
+        channel_options = laser_geometry::channel_option::None;
+      }
     }
 
     laser_proj_.transformLaserScanToPointCloud(tf_start.frame_id_,

@@ -48,6 +48,7 @@ public:
     ros::NodeHandle pnh("~");
 
     pnh.param("scan_sub_queue_size", p_scan_queue_size_, 1);
+    pnh.param("fill_in_intensity_if_not_available", p_fill_in_intensity_if_not_available_, false);
 
     ROS_INFO("FilteredLocalizedScanConverter using queue size %d", p_scan_queue_size_);
 
@@ -61,7 +62,7 @@ public:
 
   void scanCallback(const vigir_perception_msgs::FilteredLocalizedLaserScan& scan_in)
   {
-    if (converter.convertScanToClouds(scan_in, cloud_out_, cloud_self_filtered_out))
+    if (converter.convertScanToClouds(scan_in, cloud_out_, cloud_self_filtered_out, p_fill_in_intensity_if_not_available_))
     {
       cloud_pub_.publish(cloud_out_);
       cloud_self_filtered_pub_.publish(cloud_self_filtered_out);
@@ -83,6 +84,7 @@ private:
   sensor_msgs::PointCloud2 cloud_self_filtered_out;
 
   int p_scan_queue_size_;
+  bool p_fill_in_intensity_if_not_available_;
 
 };
 

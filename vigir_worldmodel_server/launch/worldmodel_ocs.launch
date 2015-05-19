@@ -19,6 +19,7 @@
     <remap from="~/cloud_out" to="/scan_cloud"/>
     <remap from="~/cloud_self_filtered_out" to="/scan_cloud_filtered"/>
     <param name="scan_sub_queue_size" value="1200"/>
+    <param name="fill_in_intensity_if_not_available" value="true"/>   
   </node>
   
 </launch>
