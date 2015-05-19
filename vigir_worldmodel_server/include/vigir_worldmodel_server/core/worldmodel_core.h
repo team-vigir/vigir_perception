@@ -105,21 +105,27 @@ namespace vigir_worldmodel{
 
       // State provider publishes pose data based on tf. Moved into worldmodel to prevent many dedicated tf subscriber nodes
       // consuming both CPU and bandwidth. Runs it´s own thread
-      state_provider_.reset(new StateProvider());
 
-      state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
-                                                                                  tf_listener_,
-                                                                                  "/flor/r_arm_current_pose",
-                                                                                  "/world",
-                                                                                  "/r_hand"
-                                                                                  )));
-      state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
-                                                                                  tf_listener_,
-                                                                                  "/flor/l_arm_current_pose",
-                                                                                  "/world",
-                                                                                  "/l_hand"
-                                                                                  )));
-      state_provider_->start();
+      pnh_in.param("publish_frames_as_poses", p_publish_frames_as_poses_, true);
+
+      if (p_publish_frames_as_poses_)
+      {
+        state_provider_.reset(new StateProvider());
+
+        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
+                                                                                            tf_listener_,
+                                                                                            "/flor/r_arm_current_pose",
+                                                                                            "/world",
+                                                                                            "/r_hand"
+                                                                                            )));
+        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
+                                                                                            tf_listener_,
+                                                                                            "/flor/l_arm_current_pose",
+                                                                                            "/world",
+                                                                                            "/l_hand"
+                                                                                            )));
+        state_provider_->start();
+      }
 
       transform_service_provider_.reset(new TransformServiceProvider(tf_listener_));
 
@@ -238,6 +244,8 @@ namespace vigir_worldmodel{
 
     std::string p_root_frame_;
     std::string p_required_frames_list_;
+    bool p_publish_frames_as_poses_;
+
     std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
 
