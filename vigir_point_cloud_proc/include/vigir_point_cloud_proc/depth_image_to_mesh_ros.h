@@ -93,11 +93,11 @@ public:
 
     if (depth_msg->encoding == sensor_msgs::image_encodings::TYPE_16UC1)
     {
-      convertToPcl<uint16_t>(depth_msg, cloud, model_);
+      convertToPcl<uint16_t>(depth_msg, cloud, model_, 1.5);
     }
     else if (depth_msg->encoding == sensor_msgs::image_encodings::TYPE_32FC1)
     {
-      convertToPcl<float>(depth_msg, cloud, model_);
+      convertToPcl<float>(depth_msg, cloud, model_, 1.5);
     }
 
 
@@ -133,7 +133,7 @@ public:
   bool convertToPcl(const sensor_msgs::ImageConstPtr& depth_msg,
                boost::shared_ptr<pcl::PointCloud<PointT> > cloud,
                const image_geometry::PinholeCameraModel& model,
-               double range_max = 0.0)
+               double max_range = 1000.0)
   {
     cloud->width  = depth_msg->width;
     cloud->height = depth_msg->height;
@@ -164,24 +164,22 @@ public:
         // Missing points denoted by NaNs
         if (!depth_image_proc::DepthTraits<T>::valid(depth))
         {
-          if (range_max != 0.0)
-          {
-            depth = depth_image_proc::DepthTraits<T>::fromMeters(range_max);
-          }
-          else
-          {
-            //*iter_x = *iter_y = *iter_z = bad_point;
             point.x = bad_point;
             point.y = bad_point;
             point.z = bad_point;
             continue;
-          }
         }
 
-        // Fill in XYZ
-        point.x = (u - center_x) * depth * constant_x;
-        point.y = (v - center_y) * depth * constant_y;
-        point.z = depth_image_proc::DepthTraits<T>::toMeters(depth);
+        if (depth_image_proc::DepthTraits<T>::toMeters(depth) > max_range)
+        {
+          point.x = bad_point;
+          point.y = bad_point;
+          point.z = bad_point;
+        }else{
+          point.x = (u - center_x) * depth * constant_x;
+          point.y = (v - center_y) * depth * constant_y;
+          point.z = depth_image_proc::DepthTraits<T>::toMeters(depth);
+        }
       }
     }
 
