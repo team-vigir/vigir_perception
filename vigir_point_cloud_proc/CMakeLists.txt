@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   shape_msgs
   pcl_msgs
   visualization_msgs
+  image_transport
+  image_geometry
+  depth_image_proc
 )
 
 find_package(PCL REQUIRED)
@@ -23,7 +26,7 @@ include_directories(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES vigir_point_cloud_proc
-  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs shape_msgs visualization_msgs pcl_msgs
+  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs shape_msgs visualization_msgs pcl_msgs image_transport image_geometry depth_image_proc
   DEPENDS system_lib
 )
 
@@ -37,8 +40,11 @@ add_executable(cloud_to_mesh_node src/cloud_to_mesh_node.cpp ${HEADER_FILES})
 target_link_libraries(cloud_to_mesh_node ${catkin_LIBRARIES})
 add_dependencies(cloud_to_mesh_node ${catkin_EXPORTED_TARGETS})
 
+add_executable(depth_image_to_mesh_node src/depth_image_to_mesh_node.cpp ${HEADER_FILES})
+target_link_libraries(depth_image_to_mesh_node ${catkin_LIBRARIES})
+add_dependencies(depth_image_to_mesh_node ${catkin_EXPORTED_TARGETS})
 
-install(TARGETS cloud_to_mesh_node
+install(TARGETS cloud_to_mesh_node depth_image_to_mesh_node
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
