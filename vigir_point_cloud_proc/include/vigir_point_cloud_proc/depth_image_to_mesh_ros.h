@@ -76,7 +76,7 @@ public:
     it_.reset(new image_transport::ImageTransport(pnh));
 
     image_transport::TransportHints hints("raw", ros::TransportHints(), pnh);
-    sub_depth_ = it_->subscribeCamera("image_rect", p_img_queue_size_, &DepthImageToMeshRos::depthCb, this, hints);
+    sub_depth_ = it_->subscribeCamera("image_rect", 6, &DepthImageToMeshRos::depthCb, this, hints);
 
     //cloud_to_mesh_.setVoxelFilterSize(0.025);
 
@@ -85,10 +85,11 @@ public:
   void depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
                const sensor_msgs::CameraInfoConstPtr& info_msg)
   {
+
     // Update camera model
     model_.fromCameraInfo(info_msg);
 
-    boost::shared_ptr<pcl::PointCloud<PointT> > cloud;
+    boost::shared_ptr<pcl::PointCloud<PointT> > cloud (new pcl::PointCloud<PointT>());
 
     if (depth_msg->encoding == sensor_msgs::image_encodings::TYPE_16UC1)
     {
@@ -98,6 +99,9 @@ public:
     {
       convertToPcl<float>(depth_msg, cloud, model_);
     }
+
+
+    std::cout << "cloud size: " << cloud->size() << "\n";
 
     depth_image_to_mesh_.setInput(cloud);
     depth_image_to_mesh_.computeMesh();
@@ -110,6 +114,7 @@ public:
         visualization_msgs::Marker mesh_marker;
 
         meshToMarkerMsg(depth_image_to_mesh_.getMesh() ,mesh_marker);
+        mesh_marker.header.frame_id = depth_msg->header.frame_id;
         marker_pub_.publish(mesh_marker);
       }
 
@@ -122,8 +127,6 @@ public:
     }else{
       ROS_WARN("Could not generate mesh for depth image!");
     }
-
-
   }
 
   template<typename T>
@@ -132,10 +135,6 @@ public:
                const image_geometry::PinholeCameraModel& model,
                double range_max = 0.0)
   {
-    if (!cloud.get()){
-      cloud.reset(new pcl::PointCloud<PointT>() );
-    }
-
     cloud->width  = depth_msg->width;
     cloud->height = depth_msg->height;
     cloud->resize(cloud->width * cloud->height);
@@ -186,7 +185,7 @@ public:
       }
     }
 
-
+    return true;
   }
 
   /*
