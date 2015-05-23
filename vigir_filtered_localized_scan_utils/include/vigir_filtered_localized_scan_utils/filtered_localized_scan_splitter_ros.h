@@ -66,12 +66,21 @@ public:
                             out_scans,
                             p_scan_split_number_))
     {
-      //ROS_INFO("Size: %d", (int)out_scans.size());
+      if (out_scans.size() != p_scan_split_number_){
+        ROS_ERROR("Split scan vector size %d != desired split scan size %d", (int)out_scans.size(), (int)p_scan_split_number_);
+        return;
+      }else if (out_scans.size() == 0){
+        ROS_ERROR("Split scan vector size is zero!");
+        return;
+      }
+
+      //Publish the split scans on single topic
       for (size_t i = 0; i < out_scans.size(); ++i){
         scan_pub_.publish(out_scans[i]);
       }
+
     }else{
-      ROS_WARN("Could not split can, skipping.");
+      ROS_WARN("Could not split scan, skipping.");
     }
   }
 
