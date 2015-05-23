@@ -66,7 +66,7 @@ public:
                             out_scans,
                             3))
     {
-      ROS_INFO("Size: %d", (int)out_scans.size());
+      //ROS_INFO("Size: %d", (int)out_scans.size());
       for (size_t i = 0; i < out_scans.size(); ++i){
         scan_pub_.publish(out_scans[i]);
       }
