@@ -49,7 +49,6 @@ public:
 
     pnh.param("scan_sub_queue_size", p_scan_queue_size_, 1);
     pnh.param("split_into_num_scans", p_scan_split_number_, 3);
-    pnh.param("fill_in_intensity_if_not_available", p_fill_in_intensity_if_not_available_, false);
 
     ROS_INFO("FilteredLocalizedScanSplitter using incoming queue size %d", p_scan_queue_size_);
 
@@ -84,7 +83,7 @@ private:
   ros::Publisher scan_pub_;
 
   int p_scan_queue_size_;
-  bool p_scan_split_number_;
+  int p_scan_split_number_;
   bool p_fill_in_intensity_if_not_available_;
 
 };
