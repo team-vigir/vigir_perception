@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <node pkg="vigir_filtered_localized_scan_utils" type="scan_split_node" name="scan_split_node" output="screen">
+    <remap from="~/scan" to="/move_group/scan_filtered_localized"/>
+    <remap from="~/scan_out" to="/splitted_scan"/>
+  </node>
+  
+    <node pkg="vigir_filtered_localized_scan_utils" type="scan_to_clouds_pub_node" name="split_scan_to_clouds_pub_node" output="screen">
+    <remap from="~/scan" to="/splitted_scan"/>
+    <remap from="~/cloud_out" to="/split_scan_cloud"/>
+    <remap from="~/cloud_self_filtered_out" to="/split_scan_cloud_filtered"/>
+  </node>
+  
+</launch>

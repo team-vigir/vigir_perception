@@ -30,55 +30,57 @@
 #define VIGIR_FILTERED_LOCALIZED_SCAN_CONVERTER_ROS_H_
 
 #include <ros/ros.h>
-#include <vigir_filtered_localized_scan_utils/filtered_localized_scan_converter.h>
+#include <vigir_filtered_localized_scan_utils/filtered_localized_scan_splitter.h>
 
 namespace vigir_filtered_localized_scan_utils
 {
 
 /**
- * @brief The FilteredLocalizedScanConversionRos class provides
+ * @brief The FilteredLocalizedScanSplitterRos class provides
  * a ROS(topic) interface for converting FilteredLocalizedLaserScan
  * messages to point cloud representations.
  */
-class FilteredLocalizedScanConversionRos
+class FilteredLocalizedScanSplitterRos
 {
 public:
-  FilteredLocalizedScanConversionRos()
+  FilteredLocalizedScanSplitterRos()
   {
     ros::NodeHandle pnh("~");
 
     pnh.param("scan_sub_queue_size", p_scan_queue_size_, 1);
     pnh.param("fill_in_intensity_if_not_available", p_fill_in_intensity_if_not_available_, false);
 
-    ROS_INFO("FilteredLocalizedScanConverter using incoming queue size %d", p_scan_queue_size_);
+    ROS_INFO("FilteredLocalizedScanSplitter using incoming queue size %d", p_scan_queue_size_);
 
-    cloud_pub_              = pnh.advertise<sensor_msgs::PointCloud2>("cloud_out", 1, false);
-    cloud_self_filtered_pub_= pnh.advertise<sensor_msgs::PointCloud2>("cloud_self_filtered_out", 10, false);
-    scan_sub_ = pnh.subscribe("scan", p_scan_queue_size_, &FilteredLocalizedScanConversionRos::scanCallback, this);    
+    scan_pub_ = pnh.advertise<vigir_perception_msgs::FilteredLocalizedLaserScan>("scan_out", 100, false);
+    scan_sub_ = pnh.subscribe("scan", p_scan_queue_size_, &FilteredLocalizedScanSplitterRos::scanCallback, this);
   }
 
   void scanCallback(const vigir_perception_msgs::FilteredLocalizedLaserScan& scan_in)
   {
-    if (converter.convertScanToClouds(scan_in, cloud_out_, cloud_self_filtered_out, p_fill_in_intensity_if_not_available_))
+    std::vector<vigir_perception_msgs::FilteredLocalizedLaserScan::Ptr> out_scans;
+
+
+
+    if (converter.splitScan(scan_in,
+                            out_scans,
+                            3))
     {
-      cloud_pub_.publish(cloud_out_);
-      cloud_self_filtered_pub_.publish(cloud_self_filtered_out);
+      ROS_INFO("Size: %d", (int)out_scans.size());
+      for (size_t i = 0; i < out_scans.size(); ++i){
+        scan_pub_.publish(out_scans[i]);
+      }
     }else{
-      ROS_WARN("Could not convert scan to cloud, skipping.");
+      ROS_WARN("Could not split can, skipping.");
     }
   }
 
 
 private:
-  FilteredLocalizedScanConversion converter;
-  //sensor_msgs::LaserScan scan_;
-  //laser_geometry::LaserProjection laser_proj_;
-  ros::Subscriber scan_sub_;
-  ros::Publisher cloud_pub_;
-  ros::Publisher cloud_self_filtered_pub_;
+  FilteredLocalizedScanSplitter converter;
 
-  sensor_msgs::PointCloud2 cloud_out_;
-  sensor_msgs::PointCloud2 cloud_self_filtered_out;
+  ros::Subscriber scan_sub_;
+  ros::Publisher scan_pub_;
 
   int p_scan_queue_size_;
   bool p_fill_in_intensity_if_not_available_;
