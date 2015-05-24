@@ -9,7 +9,7 @@
     <param name="root_frame" value="/world" />
 
     <!--Will only start worldmodel when tf transforms between these and root are available-->
-    <param name="required_frames" value="/head_hokuyo_frame /l_hand /r_hand" />
+    <param name="required_frames" value="/l_hand /r_hand" />
 
     <param name="octomap_save_folder" value="$(find vigir_worldmodel_server)/maps" />
     <param name="use_external_octomap" value="false" />
