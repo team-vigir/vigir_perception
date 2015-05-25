@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!--  <node pkg="vigir_worldmodel_main" type="worldmodel_main" name="worldmodel_main" output="screen" launch-prefix="gdb -ex run iiargs">-->
+  <node pkg="vigir_point_cloud_proc" type="depth_image_to_mesh_node" name="depth_image_to_mesh_node" output="screen" respawn="true">
+    <remap from="/depth_image_to_mesh_node/camera_info" to="/multisense/depth/camera_info" />
+    <remap from="/depth_image_to_mesh_node/image_rect" to="/multisense/depth" />
+    <param name="max_publish_rate" value="2" />
+    <param name="target_frame" value="world" />
+  </node>
+  
+  <node pkg="topic_tools" type="relay" name="depth_cam_info_relay" args="/multisense/depth/camera_info /multisense/camera_info" />
+
+</launch>

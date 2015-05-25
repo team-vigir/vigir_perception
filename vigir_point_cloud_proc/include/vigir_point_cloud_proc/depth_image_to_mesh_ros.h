@@ -65,29 +65,30 @@ class DepthImageToMeshRos
 public:
   DepthImageToMeshRos()
   {
-    last_img_pub_stamp_ = ros::Time::now();
-
     ros::NodeHandle pnh("~");
 
-    pnh.param("cloud_sub_queue_size", p_img_queue_size_, 1);
+    pnh.param("image_queue_size", p_img_queue_size_, 6);
     pnh.param("max_publish_rate", p_max_rate_hz_, 0.0);
     pnh.param("target_frame", p_target_frame_, std::string(""));
 
-    if (p_target_frame_.empty()){
+    if (!p_target_frame_.empty()){
       tfl_.reset(new tf::TransformListener());
+      ROS_INFO("DepthImageToMeshRos using target_frame: %s", p_target_frame_.c_str());
+    }else{
+      ROS_INFO("DepthImageToMeshRos using empty target_frame, not transforming mesh.");
     }
 
-    ROS_INFO("DepthImageToMeshRos using queue size %d", p_img_queue_size_);
+    ROS_INFO("DepthImageToMeshRos using queue size %d and max_publish_rate %f", p_img_queue_size_, p_max_rate_hz_);
 
     marker_pub_ = pnh.advertise<visualization_msgs::Marker>("mesh_marker", 1, false);
     shape_pub_  = pnh.advertise<shape_msgs::Mesh>("mesh_shape", 1, false);
 
-    //cloud_sub_ = pnh.subscribe("cloud", p_cloud_queue_size_, &DepthImageToMeshRos::cloudCallback, this);
-
     it_.reset(new image_transport::ImageTransport(pnh));
 
     image_transport::TransportHints hints("raw", ros::TransportHints(), pnh);
-    sub_depth_ = it_->subscribeCamera("image_rect", 6, &DepthImageToMeshRos::depthCb, this, hints);
+    sub_depth_ = it_->subscribeCamera("image_rect", p_img_queue_size_, &DepthImageToMeshRos::depthCb, this, hints);
+
+    last_img_pub_stamp_ = ros::Time::now();
   }
 
   void depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
