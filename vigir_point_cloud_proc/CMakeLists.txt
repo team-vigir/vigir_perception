@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   image_geometry
   depth_image_proc
+  tf
+  tf_conversions
 )
 
 find_package(PCL REQUIRED)
@@ -26,7 +28,7 @@ include_directories(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES vigir_point_cloud_proc
-  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs shape_msgs visualization_msgs pcl_msgs image_transport image_geometry depth_image_proc
+  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs shape_msgs visualization_msgs pcl_msgs image_transport image_geometry depth_image_proc tf tf_conversions
   DEPENDS system_lib
 )
 

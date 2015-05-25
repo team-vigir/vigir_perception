@@ -48,12 +48,15 @@
 #include <image_geometry/pinhole_camera_model.h>
 #include <depth_image_proc/depth_conversions.h>
 
+#include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
+
 namespace vigir_point_cloud_proc
 {
 
 /**
  * @brief The DepthImageToMeshRos class provides
- * a ROS(topic) interface for converting point clouds
+ * a ROS(topic) interface for converting point cloud
  * messages to mesh representations.
  */
 template <typename PointT>
@@ -65,6 +68,11 @@ public:
     ros::NodeHandle pnh("~");
 
     pnh.param("cloud_sub_queue_size", p_img_queue_size_, 1);
+    pnh.param("target_frame", p_target_frame_, std::string(""));
+
+    if (p_target_frame_.empty()){
+      tfl_.reset(new tf::TransformListener());
+    }
 
     ROS_INFO("DepthImageToMeshRos using queue size %d", p_img_queue_size_);
 
@@ -77,9 +85,6 @@ public:
 
     image_transport::TransportHints hints("raw", ros::TransportHints(), pnh);
     sub_depth_ = it_->subscribeCamera("image_rect", 6, &DepthImageToMeshRos::depthCb, this, hints);
-
-    //cloud_to_mesh_.setVoxelFilterSize(0.025);
-
   }
 
   void depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
@@ -101,11 +106,10 @@ public:
     }
 
 
-    std::cout << "cloud size: " << cloud->size() << "\n";
+    //std::cout << "cloud size: " << cloud->size() << "\n";
 
     depth_image_to_mesh_.setInput(cloud);
     depth_image_to_mesh_.computeMesh();
-
 
     if (depth_image_to_mesh_.computeMesh())
     {
@@ -121,8 +125,36 @@ public:
       if (shape_pub_.getNumSubscribers() > 0){
         shape_msgs::Mesh shape_mesh;
 
-        meshToShapeMsg(depth_image_to_mesh_.getMesh() ,shape_mesh);
-        shape_pub_.publish(shape_mesh);
+        if (p_target_frame_.empty()){
+          meshToShapeMsg(depth_image_to_mesh_.getMesh() ,shape_mesh);
+          shape_pub_.publish(shape_mesh);
+        }else{
+          //Transform mesh to world frame if a target_frame is set via param server
+          try{
+            if (tfl_->waitForTransform(p_target_frame_, depth_msg->header.frame_id, depth_msg->header.stamp, ros::Duration(0.5))){
+              tf::StampedTransform transform;
+              tfl_->lookupTransform(p_target_frame_, depth_msg->header.frame_id, depth_msg->header.stamp, transform);
+
+              Eigen::Affine3d transform_eigen;
+              tf::transformTFToEigen(transform, transform_eigen);
+
+              meshToShapeMsg(*depth_image_to_mesh_.getMeshTransformed(transform_eigen) ,shape_mesh);
+              shape_pub_.publish(shape_mesh);
+
+            }else{
+              ROS_WARN("Timeout while transforming from %s to %s, not publishing depth image mesh!",
+                        depth_msg->header.frame_id.c_str(),
+                        p_target_frame_.c_str());
+              return;
+            }
+
+          }catch(...){
+            ROS_ERROR("Tf exception while transforming from %s to %s, not publishing depth image mesh!",
+                      depth_msg->header.frame_id.c_str(),
+                      p_target_frame_.c_str());
+            return;
+          }
+        }
       }
     }else{
       ROS_WARN("Could not generate mesh for depth image!");
@@ -148,9 +180,6 @@ public:
     float constant_y = unit_scaling / model.fy();
     float bad_point = std::numeric_limits<float>::quiet_NaN();
 
-    //sensor_msgs::PointCloud2Iterator<float> iter_x(*cloud_msg, "x");
-    //sensor_msgs::PointCloud2Iterator<float> iter_y(*cloud_msg, "y");
-    //sensor_msgs::PointCloud2Iterator<float> iter_z(*cloud_msg, "z");
     const T* depth_row = reinterpret_cast<const T*>(&depth_msg->data[0]);
     int row_step = depth_msg->step / sizeof(T);
     for (int v = 0; v < (int)cloud->height; ++v, depth_row += row_step)
@@ -186,38 +215,6 @@ public:
     return true;
   }
 
-  /*
-  void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_in)
-  {
-    boost::shared_ptr<pcl::PointCloud<PointT> > pc (new pcl::PointCloud<PointT>());
-    pcl::fromROSMsg(*cloud_in, *pc);
-
-    cloud_to_mesh_.setInput(pc);
-
-    if (cloud_to_mesh_.computeMesh())
-    {
-
-      if (marker_pub_.getNumSubscribers() > 0){
-        visualization_msgs::Marker mesh_marker;
-
-        meshToMarkerMsg(cloud_to_mesh_.getMesh() ,mesh_marker);
-        marker_pub_.publish(mesh_marker);
-      }
-
-      if (shape_pub_.getNumSubscribers() > 0){
-        shape_msgs::Mesh shape_mesh;
-
-        meshToShapeMsg(cloud_to_mesh_.getMesh() ,shape_mesh);
-        shape_pub_.publish(shape_mesh);
-      }
-    }else{
-      ROS_WARN("Could not generate mesh for point cloud!");
-    }
-  }
-  */
-
-
-
 private:
 
   boost::shared_ptr<image_transport::ImageTransport> it_;
@@ -232,8 +229,11 @@ private:
   sensor_msgs::PointCloud2 cloud_self_filtered_out;
 
   int p_img_queue_size_;
+  std::string p_target_frame_;
 
   DepthImageToMesh<PointT> depth_image_to_mesh_;
+
+  boost::shared_ptr<tf::TransformListener> tfl_;
 
 };
 

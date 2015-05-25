@@ -35,20 +35,14 @@
 
 #include <pcl/point_cloud.h>
 
-#include <pcl/surface/marching_cubes.h>
-#include <pcl/surface/marching_cubes_rbf.h>
-#include <pcl/surface/marching_cubes_hoppe.h>
 #include <pcl/surface/organized_fast_mesh.h>
-#include <pcl/surface/poisson.h>
-#include <pcl/surface/gp3.h>
-#include <pcl/surface/mls.h>
 #include <pcl/common/time.h>
 
-#include <pcl/filters/voxel_grid.h>
-
-
+#include <pcl/common/transforms.h>
 
 #include <pcl/features/normal_3d.h>
+
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <pcl/io/ply_io.h>
 
@@ -67,21 +61,13 @@ class DepthImageToMesh
 public:
 
   DepthImageToMesh()
-  {
-    //surface_reconstruction_.reset(new pcl::MarchingCubesRBF<PointTNormal>());
-
+  {    
     org_fast_mesh_.reset(new pcl::OrganizedFastMesh<PointT>());
     org_fast_mesh_->setTriangulationType(pcl::OrganizedFastMesh<PointT>::TRIANGLE_ADAPTIVE_CUT);
-
-    voxel_size_ = 0.05;
   }
 
   bool setInput( const boost::shared_ptr<pcl::PointCloud<PointT> > pc_in){
     pc_ = pc_in;
-  }
-
-  void setVoxelFilterSize(double size){
-    voxel_size_ = size;
   }
 
   bool computeMesh()
@@ -99,36 +85,41 @@ public:
 
     org_fast_mesh_->reconstruct(mesh_);
 
-
-
-
-    std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
+    //std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
 
     return true;
-
-    //pcl::io::savePLYFile("/home/kohlbrecher/poly.ply", mesh_);
-
-
   }
 
   const pcl::PolygonMesh& getMesh() const { return mesh_; };
 
+  const pcl::PolygonMeshConstPtr getMeshTransformed(const Eigen::Affine3d& transform) const
+  {
+    pcl::PolygonMeshPtr transformed_mesh(new pcl::PolygonMesh());
+
+    //Polys can be copied directly
+    transformed_mesh->polygons = mesh_.polygons;
+
+    //Transform vertices represented by point cloud
+    pcl::PointCloud<PointT> cloud;
+    pcl::fromPCLPointCloud2(mesh_.cloud, cloud);
+
+    pcl::PointCloud<PointT> cloud_transformed;
+    pcl::transformPointCloud(cloud, cloud_transformed, transform);
+
+    pcl::toPCLPointCloud2(cloud_transformed, transformed_mesh->cloud);
+
+    return transformed_mesh;
+  }
+
 private:
-  //sensor_msgs::LaserScan scan_;
-  //laser_geometry::LaserProjection laser_proj_;
-  //tf::Transformer tf_transformer_;
+
   boost::shared_ptr<pcl::PointCloud<PointT> > pc_;
 
-  //boost::shared_ptr<pcl::SurfaceReconstruction<pcl::PointNormal> > surface_reconstruction_;
   boost::shared_ptr<pcl::OrganizedFastMesh<PointT> > org_fast_mesh_;
 
   pcl::PolygonMesh mesh_;
 
   pcl::StopWatch stop_watch_;
-
-  double voxel_size_;
-
-
 
 };
 
