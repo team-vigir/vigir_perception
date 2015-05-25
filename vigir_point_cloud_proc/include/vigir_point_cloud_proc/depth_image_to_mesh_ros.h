@@ -65,9 +65,12 @@ class DepthImageToMeshRos
 public:
   DepthImageToMeshRos()
   {
+    last_img_pub_stamp_ = ros::Time::now();
+
     ros::NodeHandle pnh("~");
 
     pnh.param("cloud_sub_queue_size", p_img_queue_size_, 1);
+    pnh.param("max_publish_rate", p_max_rate_hz_, 0.0);
     pnh.param("target_frame", p_target_frame_, std::string(""));
 
     if (p_target_frame_.empty()){
@@ -90,6 +93,16 @@ public:
   void depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
                const sensor_msgs::CameraInfoConstPtr& info_msg)
   {
+    //If nobody is interested in published data return
+    if ((marker_pub_.getNumSubscribers() == 0) &&
+        (shape_pub_.getNumSubscribers()  == 0))
+      return;
+
+    //If max rate is set, check if we should proceed with computation
+    if (p_max_rate_hz_ > 0.0){
+     if (depth_msg->header.stamp <= last_img_pub_stamp_ + ros::Duration(1.0/p_max_rate_hz_))
+       return;
+    }
 
     // Update camera model
     model_.fromCameraInfo(info_msg);
@@ -113,6 +126,7 @@ public:
 
     if (depth_image_to_mesh_.computeMesh())
     {
+      last_img_pub_stamp_ = depth_msg->header.stamp;
 
       if (marker_pub_.getNumSubscribers() > 0){
         visualization_msgs::Marker mesh_marker;
@@ -229,11 +243,14 @@ private:
   sensor_msgs::PointCloud2 cloud_self_filtered_out;
 
   int p_img_queue_size_;
+  double p_max_rate_hz_;
   std::string p_target_frame_;
 
   DepthImageToMesh<PointT> depth_image_to_mesh_;
 
   boost::shared_ptr<tf::TransformListener> tfl_;
+
+  ros::Time last_img_pub_stamp_;
 
 };
 
