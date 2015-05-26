@@ -120,7 +120,7 @@ namespace vigir_worldmodel{
       ocs_crop_gridmap_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/gridmap_request", 1, &WorldmodelCommunication::ocsGridmapRequestCallback, this);
 
       //Images
-      left_camera_lidar_depth_image_pub_ = m_nh.advertise<sensor_msgs::Image>("/multisense_sl/camera/left/lidar_depth_image",1, false);
+      //left_camera_lidar_depth_image_pub_ = m_nh.advertise<sensor_msgs::Image>("/multisense_sl/camera/left/lidar_depth_image",1, false);
 
       // Grid maps
       occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map", 1, false);
@@ -554,6 +554,7 @@ namespace vigir_worldmodel{
       }
 
       // @ToDo Proof of concept, make available properly later
+      /*
       if (left_camera_lidar_depth_image_pub_.getNumSubscribers() > 0){
         ros::Time start = ros::Time::now();
 
@@ -597,6 +598,7 @@ namespace vigir_worldmodel{
         left_camera_lidar_depth_image_pub_.publish(depth_image);
         ROS_INFO("Generating depth image took %f seconds", (ros::Time::now() - start).toSec());
       }
+      */
 
       /*
       if (ground_lvl_occupancy_grid_pub_.getNumSubscribers() > 0){
@@ -909,7 +911,7 @@ namespace vigir_worldmodel{
     ros::Publisher upper_body_level_occupancy_grid_pub_;
     ros::Publisher occupancy_grid_near_robot_pub_;
 
-    ros::Publisher left_camera_lidar_depth_image_pub_;
+    //ros::Publisher left_camera_lidar_depth_image_pub_;
 
     ros::Publisher ocs_crop_pointcloud_pub_;
     ros::Publisher ocs_crop_pointcloud_stereo_pub_;
