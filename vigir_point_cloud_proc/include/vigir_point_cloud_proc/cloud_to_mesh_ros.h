@@ -63,8 +63,8 @@ public:
 
     ROS_INFO("CloudToMeshRos using queue size %d", p_cloud_queue_size_);
 
-    marker_pub_ = pnh.advertise<visualization_msgs::Marker>("mesh_marker", 1, false);
-    shape_pub_  = pnh.advertise<shape_msgs::Mesh>("mesh_shape", 1, false);
+    marker_pub_ = pnh.advertise<visualization_msgs::Marker>("mesh_marker", 1, true);
+    shape_pub_  = pnh.advertise<shape_msgs::Mesh>("mesh_shape", 1, true);
 
     cloud_sub_ = pnh.subscribe("cloud", p_cloud_queue_size_, &CloudToMeshRos::cloudCallback, this);
 
