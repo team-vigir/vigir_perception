@@ -71,6 +71,7 @@ namespace vigir_worldmodel{
     , pnh_(pnh_in)
     , octo_marker_vis_(pnh_in)
     , point_cloud_vis_(pnh_in)
+    , unfiltered_point_cloud_vis_(pnh_in, "unfiltered_cloud_vis")
     {
       tf_listener_.reset(new tf::TransformListener());
 
@@ -91,7 +92,7 @@ namespace vigir_worldmodel{
       //stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
       //stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/multisense_sl/points2_low_rate"));
 
-      vis_timer_ = pnh_in.createTimer(ros::Duration(1.0), &WorldmodelCore::visTimerCallback, this, false);
+      vis_timer_ = pnh_in.createTimer(ros::Duration(2.0), &WorldmodelCore::visTimerCallback, this, false);
 
       if (!p_use_external_octomap_){
         octo_update_timer_ = pnh_in.createTimer(ros::Duration(0.1), &WorldmodelCore::octoUpdateTimerCallback, this, false);
@@ -148,22 +149,30 @@ namespace vigir_worldmodel{
 
       if (point_cloud_vis_.hasSubscribers()){
 
+        ros::WallTime start = ros::WallTime::now();
+
         pcl::PointCloud<ScanPointT>::Ptr cloud;
         cloud.reset (new pcl::PointCloud<ScanPointT>());
         if (scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_,2000)){
           point_cloud_vis_.publishVis(*cloud);
         }
 
-        /*
-      pcl::PointCloud<StereoPointT>::Ptr cloud;
-      cloud.reset (new pcl::PointCloud<StereoPointT>());
-      if (stereo_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_,5))
-      {
-         point_cloud_vis_.publishVis(*cloud);
+        ROS_DEBUG("Generating and publishing filtered cloud took %f seconds.", (ros::WallTime::now()-start).toSec());
       }
-      */
 
+      if (unfiltered_point_cloud_vis_.hasSubscribers()){
+
+        ros::WallTime start = ros::WallTime::now();
+
+        pcl::PointCloud<ScanPointT>::Ptr cloud;
+        cloud.reset (new pcl::PointCloud<ScanPointT>());
+        if (unfiltered_scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_,2000)){
+          unfiltered_point_cloud_vis_.publishVis(*cloud);
+        }
+
+        ROS_DEBUG("Generating and publishing unfiltered cloud took %f seconds.", (ros::WallTime::now()-start).toSec());
       }
+
     }
 
     void octoUpdateTimerCallback(const ros::TimerEvent& event)
@@ -247,6 +256,7 @@ namespace vigir_worldmodel{
     //Visualizers (for debugging during development)
     OctomapVisualization octo_marker_vis_;
     PointCloudVisualization point_cloud_vis_;
+    PointCloudVisualization unfiltered_point_cloud_vis_;
 
     std::string p_root_frame_;
     std::string p_required_frames_list_;

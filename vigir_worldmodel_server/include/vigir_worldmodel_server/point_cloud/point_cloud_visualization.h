@@ -41,9 +41,9 @@ namespace vigir_worldmodel{
   class PointCloudVisualization
   {
   public:
-    PointCloudVisualization(ros::NodeHandle& nh)
+    PointCloudVisualization(ros::NodeHandle& nh, const std::string topic = std::string("pointcloud_vis"))
     {
-      pc_pub_ = nh.advertise<sensor_msgs::PointCloud2>("pointcloud_vis", 1, false);
+      pc_pub_ = nh.advertise<sensor_msgs::PointCloud2>(topic, 1, false);
     }
 
     template <class PointT>
