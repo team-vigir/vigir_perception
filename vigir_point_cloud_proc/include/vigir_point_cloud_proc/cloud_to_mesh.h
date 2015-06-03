@@ -111,7 +111,7 @@ public:
     pre_filter.filter(*pc_voxelized);
 
     double time_prefilter = stop_watch_.getTimeSeconds();
-    std::cout << "Prefilter finished in " << time_prefilter << " s.\n";
+    //std::cout << "Prefilter finished in " << time_prefilter << " s.\n";
 
 
     pcl::MovingLeastSquares<PointT, PointTNormal> mls;
@@ -131,7 +131,7 @@ public:
     mls.process(*point_cloud_mls_normal);
 
     double time_mls = stop_watch_.getTimeSeconds();
-    std::cout << "MLS finished in " << time_mls - time_prefilter << " s.\n";
+    //std::cout << "MLS finished in " << time_mls - time_prefilter << " s.\n";
 
 
     //std::cout << "start voxel\n";
@@ -141,7 +141,7 @@ public:
     filter.filter(*point_cloud_normal_voxelized);
 
     double time_postfilter = stop_watch_.getTimeSeconds();
-    std::cout << "Postfilter finished in " << time_postfilter - time_mls << " s.\n";
+    //std::cout << "Postfilter finished in " << time_postfilter - time_mls << " s.\n";
 
 
 
@@ -154,7 +154,7 @@ public:
     tree2->setInputCloud (point_cloud_normal_voxelized);
 
     double time_kdtree = stop_watch_.getTimeSeconds();
-    std::cout << "KdTree finished in " << time_kdtree - time_postfilter << " s.\n";
+    //std::cout << "KdTree finished in " << time_kdtree - time_postfilter << " s.\n";
     // Initialize objects
 
 
@@ -198,7 +198,7 @@ public:
     greedy.reconstruct(mesh_);
 
     double time_greedy = stop_watch_.getTimeSeconds();
-    std::cout << "Greedy finished in " << time_greedy - time_kdtree << " s.\n";
+    //std::cout << "Greedy finished in " << time_greedy - time_kdtree << " s.\n";
 
     //Saving to disk in VTK format:
     //pcl::io::saveVTKFile ("mesh.vtk", mesh);
@@ -206,7 +206,7 @@ public:
     //surface_reconstruction_->setSearchMethod(tree2);
     //surface_reconstruction_->setInputCloud(point_cloud_normal_voxelized);
 
-    std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
+    //std::cout << "Total Reconstruction finished in " << stop_watch_.getTimeSeconds() << " s.";
 
     return true;
 
