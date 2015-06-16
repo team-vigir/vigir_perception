@@ -13,9 +13,9 @@
   <build_depend>octomap_ros</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
-  <build_depend>flor_perception_msgs</build_depend>
+  <!--<build_depend>flor_perception_msgs</build_depend>-->
   <build_depend>vigir_perception_msgs</build_depend>
-  <build_depend>flor_utilities</build_depend>
+  <!--<build_depend>flor_utilities</build_depend>-->
   <build_depend>actionlib</build_depend>
 
   <run_depend>roscpp</run_depend>
@@ -25,9 +25,9 @@
   <run_depend>octomap_ros</run_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>std_msgs</run_depend>
-  <run_depend>flor_perception_msgs</run_depend>
+  <!--<run_depend>flor_perception_msgs</run_depend>-->
   <run_depend>vigir_perception_msgs</run_depend>
-  <run_depend>flor_utilities</run_depend>
+  <!--<run_depend>flor_utilities</run_depend>-->
   <run_depend>actionlib</run_depend>
 
 </package>
