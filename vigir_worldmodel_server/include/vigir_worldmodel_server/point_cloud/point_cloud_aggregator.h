@@ -130,7 +130,7 @@ namespace vigir_worldmodel{
       transforms.resize(number_of_frames);
 
       try {
-        tf_listener_->waitForTransform(frames_list_[0], cloud->header.frame_id, cloud_stamp, ros::Duration(0.5));
+        tf_listener_->waitForTransform(frames_list_[0], cloud->header.frame_id, cloud_stamp, ros::Duration(3.0));
         for (size_t i = 0; i < number_of_frames; ++i){
 
           tf_listener_->lookupTransform(frames_list_[i], cloud->header.frame_id, cloud_stamp, transforms[i]);
