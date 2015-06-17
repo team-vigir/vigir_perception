@@ -137,6 +137,18 @@ namespace vigir_worldmodel{
       ros::NodeHandle pnh("~");
       pnh.param("octomap_save_folder", p_octomap_save_folder_ ,std::string(""));
 
+      pnh.param("gridmap_slice_reference_frames", p_reference_frames_list_, std::string(""));
+
+      if (p_reference_frames_list_.empty()){
+        grid_map_reference_frames_list_.push_back("base_link");
+        ROS_WARN("No list of grid map slice reference frames specified! Defaulting to %s",
+                 grid_map_reference_frames_list_[0].c_str());
+        ROS_WARN("Size: %d", (int)grid_map_reference_frames_list_.size());
+
+      }else{
+        boost::algorithm::split(grid_map_reference_frames_list_, p_reference_frames_list_, boost::is_any_of("\t "));
+      }
+
       
       target_pose_action_server_.reset(new actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction>(
                                        pnh,
@@ -874,23 +886,39 @@ namespace vigir_worldmodel{
 
     double getLowestFootHeight() const
     {
-      tf::StampedTransform left_foot_transform;
-      tf::StampedTransform right_foot_transform;
+      tf::StampedTransform transform;
+      //tf::StampedTransform right_foot_transform;
+      double min_z = std::numeric_limits<double>::max();
 
-      try{
-        tf_listener_->lookupTransform("/world", "/l_foot", ros::Time(0), left_foot_transform);
-        tf_listener_->lookupTransform("/world", "/r_foot", ros::Time(0), right_foot_transform);
-      }catch(tf::TransformException& ex){
-        ROS_ERROR_STREAM( "Transform failed when retrieving robot feet poses for local maps: " << ex.what() << " Assuming default offset 0 instead.");
+      for (size_t i = 0; grid_map_reference_frames_list_.size(); ++i){
+
+        ROS_ERROR("min_z: %f frame: %s ", min_z, grid_map_reference_frames_list_[i].c_str());
+        try{
+          tf_listener_->lookupTransform("/world", grid_map_reference_frames_list_[i], ros::Time(0), transform);
+
+          if (transform.getOrigin().getZ() < min_z)
+            min_z = transform.getOrigin().getZ();
+
+          //tf_listener_->lookupTransform("/world", "/r_foot", ros::Time(0), right_foot_transform);
+        }catch(tf::TransformException& ex){
+          ROS_ERROR_STREAM( "Transform failed when retrieving grid map ref pose for local maps: " << ex.what() << " Assuming default offset 0 instead.");
+        }
+
+        /*
+        if (left_foot_transform.getOrigin().z() < right_foot_transform.getOrigin().z()){
+          return left_foot_transform.getOrigin().z();
+        }else{
+          return right_foot_transform.getOrigin().z();
+        }
+        */
+
+      }
+
+      if (min_z == std::numeric_limits<double>::max()){
         return 0.0;
       }
 
-      if (left_foot_transform.getOrigin().z() < right_foot_transform.getOrigin().z()){
-        return left_foot_transform.getOrigin().z();
-      }else{
-        return right_foot_transform.getOrigin().z();
-      }
-
+      return min_z;
     }
 
 
@@ -941,6 +969,8 @@ namespace vigir_worldmodel{
     ros::Timer pub_timer_;
 
     std::string p_octomap_save_folder_;
+    std::string p_reference_frames_list_;
+    std::vector<std::string> grid_map_reference_frames_list_;
 
     boost::shared_ptr<actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction> > target_pose_action_server_;
     ros::Publisher debug_target_pose_cloud_pub_;
