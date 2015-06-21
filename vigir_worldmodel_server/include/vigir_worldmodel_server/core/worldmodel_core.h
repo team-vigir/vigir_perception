@@ -115,16 +115,25 @@ namespace vigir_worldmodel{
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
+                                                                                            "/robot_pose",
+                                                                                            "/world",
+                                                                                            "/base_link"
+                                                                                            )));
+       /*
+        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
+                                                                                            tf_listener_,
                                                                                             "/flor/r_arm_current_pose",
                                                                                             "/world",
                                                                                             "/r_hand"
                                                                                             )));
+
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/flor/l_arm_current_pose",
                                                                                             "/world",
                                                                                             "/l_hand"
-                                                                                            )));
+                                                                                          )));
+                                                                                          */
         state_provider_->start();
       }
 
