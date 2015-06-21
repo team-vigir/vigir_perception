@@ -875,21 +875,21 @@ namespace vigir_worldmodel{
     double getLowestFootHeight() const
     {
       tf::StampedTransform left_foot_transform;
-      tf::StampedTransform right_foot_transform;
+      //tf::StampedTransform right_foot_transform;
 
       try{
-        tf_listener_->lookupTransform("/world", "/l_foot", ros::Time(0), left_foot_transform);
-        tf_listener_->lookupTransform("/world", "/r_foot", ros::Time(0), right_foot_transform);
+        tf_listener_->lookupTransform("/world", "/base_link", ros::Time(0), left_foot_transform);
+        //tf_listener_->lookupTransform("/world", "/r_foot", ros::Time(0), right_foot_transform);
       }catch(tf::TransformException& ex){
         ROS_ERROR_STREAM( "Transform failed when retrieving robot feet poses for local maps: " << ex.what() << " Assuming default offset 0 instead.");
         return 0.0;
       }
 
-      if (left_foot_transform.getOrigin().z() < right_foot_transform.getOrigin().z()){
+      //if (left_foot_transform.getOrigin().z() < right_foot_transform.getOrigin().z()){
         return left_foot_transform.getOrigin().z();
-      }else{
-        return right_foot_transform.getOrigin().z();
-      }
+      //}else{
+      //  return right_foot_transform.getOrigin().z();
+      //}
 
     }
 
