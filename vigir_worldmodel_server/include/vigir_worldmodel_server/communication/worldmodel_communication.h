@@ -129,6 +129,8 @@ namespace vigir_worldmodel{
       //ground_lvl_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map_ground_lvl", 1, false);
       occupancy_grid_near_robot_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map_near_robot", 1, false);
 
+      octomap_near_robot_pub_ = m_nh.advertise<octomap_msgs::Octomap>("/octomap_near_robot", 1, false);
+
       // Reset and others
       sys_command_sub_ = m_nh.subscribe("/syscommand", 1, &WorldmodelCommunication::sysCommandCallback, this);
 
@@ -632,15 +634,16 @@ namespace vigir_worldmodel{
         octomap_full_pub_.publish(octomap);
       }
 
-      if (occupancy_grid_near_robot_pub_.getNumSubscribers() > 0){
+      if (octomap_near_robot_pub_.getNumSubscribers() > 0){
 
+        ros::WallTime start_octo_near_time = ros::WallTime::now();
 
         tf::StampedTransform transform;
 
         bool tf_success = false;
 
         try{
-          tf_listener_->lookupTransform("/world", "/pelvis", ros::Time(0), transform);
+          tf_listener_->lookupTransform("/world", "/base_link", ros::Time(0), transform);
           tf_success = true;
         }catch(tf::TransformException& ex){
           ROS_ERROR_STREAM( "Transform when retrieving robot pose for local map: " << ex.what());
@@ -660,18 +663,29 @@ namespace vigir_worldmodel{
           max.y = transform.getOrigin().y() + size;
           max.z = max_height;
 
-          //boost::shared_ptr<octomap::OcTree> octree;
-          //octree.reset(new octomap::OcTree(0.05));
+          boost::shared_ptr<octomap::OcTree> octree;
+          octree.reset(new octomap::OcTree(0.05));
           //WorldmodelOctomap octo(frame_name);
 
-          //octomap_->getBbxFilteredOctomap(octree, "/world", min, max);
+          octomap_->getBbxFilteredOctomap(octree, "/world", min, max);
 
+          octomap_msgs::Octomap octomap;
+          octomap_msgs::binaryMapToMsg(*octree, octomap);
+          octomap.header.frame_id = octomap_->getCurrentMap().getFrameId();
+          octomap.header.stamp = ros::Time::now();
+
+          octomap_near_robot_pub_.publish(octomap);
+
+          ROS_DEBUG("Publishing near robot octomap took %f seconds", (ros::WallTime::now()-start_octo_near_time).toSec());
+
+          /*
           nav_msgs::OccupancyGrid grid_map;
 
           Eigen::Vector2d min_vec (min.x, min.y);
           Eigen::Vector2d max_vec (max.x, max.y);
           octomap_->getOccupancyGridmap(octomap_->getCurrentMap().getOcTree(), grid_map, min_height, max_height, 16, &min_vec, &max_vec);
           occupancy_grid_near_robot_pub_.publish(grid_map);
+          */
         }
       }
     }
@@ -914,6 +928,7 @@ namespace vigir_worldmodel{
     ros::Publisher leg_level_occupancy_grid_pub_;
     ros::Publisher upper_body_level_occupancy_grid_pub_;
     ros::Publisher occupancy_grid_near_robot_pub_;
+    ros::Publisher octomap_near_robot_pub_;
 
     //ros::Publisher left_camera_lidar_depth_image_pub_;
 
