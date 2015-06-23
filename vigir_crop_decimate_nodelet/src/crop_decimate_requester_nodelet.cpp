@@ -8,7 +8,7 @@ namespace vigir_image_proc{
   {
   public:
     virtual void onInit();
-    void imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
+    void imageRequestCb(const vigir_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg);
     void imageCb(const sensor_msgs::ImageConstPtr& image_msg, const sensor_msgs::CameraInfoConstPtr& info_msg);
   void connectCb();
 
@@ -73,7 +73,7 @@ namespace vigir_image_proc{
 
   }
 
-  void CropDecimateRequesterNodelet::imageRequestCb(const flor_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
+  void CropDecimateRequesterNodelet::imageRequestCb(const vigir_perception_msgs::DownSampledImageRequestConstPtr& image_request_msg)
   {
     ROS_INFO("got a requester request");
     last_request_ = image_request_msg;

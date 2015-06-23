@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_crop_decimate_nodelet)
 
-find_package(catkin REQUIRED COMPONENTS vigir_crop_decimate flor_perception_msgs nodelet camera_info_manager roscpp)
+find_package(catkin REQUIRED COMPONENTS vigir_crop_decimate vigir_perception_msgs nodelet camera_info_manager roscpp)
 
 ## Declare things to be passed to other projects
 catkin_package(
     LIBRARIES ${PROJECT_NAME} #${PROJECT_NAME}_requester
-    CATKIN_DEPENDS vigir_crop_decimate flor_perception_msgs nodelet camera_info_manager roscpp
+    CATKIN_DEPENDS vigir_crop_decimate vigir_perception_msgs nodelet camera_info_manager roscpp
 )
 
 include_directories(include)
