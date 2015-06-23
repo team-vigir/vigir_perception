@@ -39,12 +39,12 @@
 #include <octomap_msgs/conversions.h>
 #include <octomap_msgs//GetOctomap.h>
 
-#include <flor_perception_msgs/EnvironmentRegionRequest.h>
-#include <flor_perception_msgs/PointCloudRegionRequest.h>
-#include <flor_perception_msgs/OctomapRegionRequest.h>
-#include <flor_perception_msgs/RaycastRequest.h>
-#include <flor_perception_msgs/PointCloudTypeRegionRequest.h>
-#include <flor_perception_msgs/GetLocomotionTargetPoseAction.h>
+#include <vigir_perception_msgs/EnvironmentRegionRequest.h>
+#include <vigir_perception_msgs/PointCloudRegionRequest.h>
+#include <vigir_perception_msgs/OctomapRegionRequest.h>
+#include <vigir_perception_msgs/RaycastRequest.h>
+#include <vigir_perception_msgs/PointCloudTypeRegionRequest.h>
+#include <vigir_perception_msgs/GetLocomotionTargetPoseAction.h>
 
 #include <actionlib/server/simple_action_server.h>
 
@@ -138,7 +138,7 @@ namespace vigir_worldmodel{
       pnh.param("octomap_save_folder", p_octomap_save_folder_ ,std::string(""));
 
       
-      target_pose_action_server_.reset(new actionlib::SimpleActionServer<flor_perception_msgs::GetLocomotionTargetPoseAction>(
+      target_pose_action_server_.reset(new actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction>(
                                        pnh,
                                        "get_locomotion_target_pose",                                    
                                        false));
@@ -155,12 +155,12 @@ namespace vigir_worldmodel{
     ~WorldmodelCommunication()
     {}
 
-    void execute_locomotion_target_provider(boost::shared_ptr<actionlib::SimpleActionServer<flor_perception_msgs::GetLocomotionTargetPoseAction> >& as)
+    void execute_locomotion_target_provider(boost::shared_ptr<actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction> >& as)
     {
       // Do lots of awesome groundbreaking robot stuff here
       //as->setSucceeded();
 
-      const flor_perception_msgs::GetLocomotionTargetPoseGoalConstPtr& goal (as->acceptNewGoal());
+      const vigir_perception_msgs::GetLocomotionTargetPoseGoalConstPtr& goal (as->acceptNewGoal());
 
       double lowest_foot_height = this->getLowestFootHeight();
 
@@ -292,7 +292,7 @@ namespace vigir_worldmodel{
 
         debug_target_pose_pose_pub_.publish(target_pose);
 
-        flor_perception_msgs::GetLocomotionTargetPoseActionResult result;
+        vigir_perception_msgs::GetLocomotionTargetPoseActionResult result;
         result.result.target_pose = target_pose;
         as->setSucceeded(result.result);
       }else{
@@ -345,8 +345,8 @@ namespace vigir_worldmodel{
       return true;
     }
 
-    bool octomapBinaryRoiSrv(flor_perception_msgs::OctomapRegionRequest::Request  &req,
-                        flor_perception_msgs::OctomapRegionRequest::Response &res)
+    bool octomapBinaryRoiSrv(vigir_perception_msgs::OctomapRegionRequest::Request  &req,
+                        vigir_perception_msgs::OctomapRegionRequest::Response &res)
     {
       std::string frame_name = req.region_req.header.frame_id;
 
@@ -402,8 +402,8 @@ namespace vigir_worldmodel{
       }
     }
 
-    bool pointcloudSrv(flor_perception_msgs::PointCloudRegionRequest::Request& req,
-    flor_perception_msgs::PointCloudRegionRequest::Response& res)
+    bool pointcloudSrv(vigir_perception_msgs::PointCloudRegionRequest::Request& req,
+    vigir_perception_msgs::PointCloudRegionRequest::Response& res)
     {
       pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
 
@@ -423,9 +423,9 @@ namespace vigir_worldmodel{
       }
     }
 
-    void ocsCloudRequestCallback(const flor_perception_msgs::PointCloudTypeRegionRequest::ConstPtr& msg)
+    void ocsCloudRequestCallback(const vigir_perception_msgs::PointCloudTypeRegionRequest::ConstPtr& msg)
     {
-      const flor_perception_msgs::EnvironmentRegionRequest& env_req = msg->environment_region_request;
+      const vigir_perception_msgs::EnvironmentRegionRequest& env_req = msg->environment_region_request;
 
       geometry_msgs::Point min_point, max_point;
       checkMinMax(env_req.bounding_box_min, env_req.bounding_box_max, min_point, max_point);
@@ -436,19 +436,19 @@ namespace vigir_worldmodel{
         aggregation_size = msg->aggregation_size;
       }
 
-      if (msg->data_source == flor_perception_msgs::PointCloudTypeRegionRequest::LIDAR_FILTERED){
+      if (msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::LIDAR_FILTERED){
         pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
         scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, aggregation_size);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_pub_.publish(pc_ros);
-      }else if(msg->data_source == flor_perception_msgs::PointCloudTypeRegionRequest::LIDAR_UNFILTERED){
+      }else if(msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::LIDAR_UNFILTERED){
         pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
         unfiltered_scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, aggregation_size);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_pub_.publish(pc_ros);
-      }else if(msg->data_source == flor_perception_msgs::PointCloudTypeRegionRequest::STEREO){
+      }else if(msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::STEREO){
         pcl::PointCloud<StereoPointT>::Ptr cloud(new pcl::PointCloud<StereoPointT>());
         stereo_head_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, 1);
         sensor_msgs::PointCloud2 pc_ros;
@@ -457,7 +457,7 @@ namespace vigir_worldmodel{
       }
     }
 
-    void ocsOctomapRequestCallback(const flor_perception_msgs::EnvironmentRegionRequest::ConstPtr& msg)
+    void ocsOctomapRequestCallback(const vigir_perception_msgs::EnvironmentRegionRequest::ConstPtr& msg)
     {
       boost::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.05));
 
@@ -476,7 +476,7 @@ namespace vigir_worldmodel{
       ocs_crop_octomap_pub_.publish(octomap);
     }
 
-    void ocsGridmapRequestCallback(const flor_perception_msgs::EnvironmentRegionRequest::ConstPtr& msg)
+    void ocsGridmapRequestCallback(const vigir_perception_msgs::EnvironmentRegionRequest::ConstPtr& msg)
     {
       geometry_msgs::Point min_point, max_point;
       checkMinMax(msg->bounding_box_min, msg->bounding_box_max, min_point, max_point);
@@ -737,7 +737,7 @@ namespace vigir_worldmodel{
     }
   }
 
-  void ocsDistQueryCloudRequestWorldCallback(const::flor_perception_msgs::RaycastRequest::ConstPtr& msg)
+  void ocsDistQueryCloudRequestWorldCallback(const::vigir_perception_msgs::RaycastRequest::ConstPtr& msg)
   {
 
     octomap::point3d origin (msg->origin.x, msg->origin.y, msg->origin.z);
@@ -783,7 +783,7 @@ namespace vigir_worldmodel{
     }
   }
 
-  void ocsDistQueryDistanceRequestFrameCallback(const::flor_perception_msgs::RaycastRequest::ConstPtr& msg)
+  void ocsDistQueryDistanceRequestFrameCallback(const::vigir_perception_msgs::RaycastRequest::ConstPtr& msg)
   {
 
     octomap::point3d origin (msg->origin.x, msg->origin.y, msg->origin.z);
@@ -938,7 +938,7 @@ namespace vigir_worldmodel{
 
     std::string p_octomap_save_folder_;
 
-    boost::shared_ptr<actionlib::SimpleActionServer<flor_perception_msgs::GetLocomotionTargetPoseAction> > target_pose_action_server_;
+    boost::shared_ptr<actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction> > target_pose_action_server_;
     ros::Publisher debug_target_pose_cloud_pub_;
     ros::Publisher debug_target_pose_pose_pub_;
   };

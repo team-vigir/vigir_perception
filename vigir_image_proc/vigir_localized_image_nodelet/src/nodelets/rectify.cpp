@@ -77,7 +77,7 @@ protected:
 
   sensor_msgs::ImageConstPtr last_image_msg_;
   sensor_msgs::CameraInfoConstPtr last_info_msg_;
-  //flor_perception_msgs::DownSampledImageRequestConstPtr last_request_;
+  //vigir_perception_msgs::DownSampledImageRequestConstPtr last_request_;
 
   ros::Timer image_publish_timer_;
 
@@ -168,7 +168,7 @@ void LocalizedImageProvider::imageCb(const sensor_msgs::ImageConstPtr& image_msg
   }
 
   //Free run (direct republish) if in ALL mode
-  if (last_request_->mode == flor_perception_msgs::DownSampledImageRequest::ALL){
+  if (last_request_->mode == vigir_perception_msgs::DownSampledImageRequest::ALL){
     this->publishCroppedImage(true);
   }
   */
