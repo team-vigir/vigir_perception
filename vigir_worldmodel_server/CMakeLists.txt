@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_worldmodel_server)
 
-find_package(catkin REQUIRED octomap_msgs octomap_ros pcl_ros flor_utilities vigir_perception_msgs vigir_perception_msgs)
+find_package(catkin REQUIRED octomap_msgs octomap_ros pcl_ros vigir_utilities vigir_perception_msgs vigir_perception_msgs)
 link_libraries(${OCTOMAP_LIBRARIES})
 find_package(PCL REQUIRED)
 include_directories(
@@ -21,7 +21,7 @@ file(GLOB_RECURSE HEADER_FILES "include/*.h")
 ## Declare things to be passed to other projects
 catkin_package(
     LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS roscpp std_msgs octomap_msgs octomap_ros pcl_ros flor_utilities vigir_perception_msgs vigir_perception_msgs
+    CATKIN_DEPENDS roscpp std_msgs octomap_msgs octomap_ros pcl_ros vigir_utilities vigir_perception_msgs vigir_perception_msgs
 )
 
 #common commands for building c++ executables and libraries

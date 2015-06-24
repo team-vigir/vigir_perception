@@ -67,7 +67,7 @@
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-#include <flor_utilities/file_utils.h>
+#include <vigir_utilities/file_utils.h>
 
 namespace vigir_worldmodel{
 
