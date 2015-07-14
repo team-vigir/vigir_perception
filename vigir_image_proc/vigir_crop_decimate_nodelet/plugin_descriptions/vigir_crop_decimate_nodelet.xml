@@ -1,0 +1,8 @@
+<!-- OpenNI driver nodelet publisher -->
+<library path="lib/libvigir_crop_decimate_nodelet">
+  <class name="vigir_crop_decimate_nodelet/CropDecimateNodelet" type="vigir_image_proc::CropDecimateNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+      Crop/Decimate nodelet
+    </description>
+  </class>
+</library>

@@ -1,0 +1,8 @@
+<!-- OpenNI driver nodelet publisher -->
+<library path="lib/libvigir_crop_decimate_nodelet_requester">
+  <class name="vigir_crop_decimate_requester_nodelet/CropDecimateRequesterNodelet" type="vigir_image_proc::CropDecimateRequesterNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+      Crop/Decimate nodelet that requires an image request
+    </description>
+  </class>
+</library>

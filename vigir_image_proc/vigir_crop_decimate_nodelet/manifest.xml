@@ -1,0 +1,25 @@
+<package>
+  <description brief="vigir_crop_decimate_nodelet">
+
+     vigir_crop_decimate_nodelet republishes cropped and decimated images
+
+  </description>
+  <author>Stefan Kohlbrecher</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/vigir_crop_decimate_nodelet</url>
+
+  <depend package="vigir_crop_decimate" />
+  <depend package="vigir_perception_msgs" />
+  <depend package="nodelet" />
+  <depend package="camera_info_manager" />
+  <depend package="roscpp" />
+
+  <export>
+    <nodelet plugin="${prefix}/plugin_descriptions/vigir_crop_decimate_nodelet.xml" />
+    <nodelet plugin="${prefix}/plugin_descriptions/vigir_crop_decimate_requester_nodelet.xml" />
+  </export>
+
+</package>
+
+
