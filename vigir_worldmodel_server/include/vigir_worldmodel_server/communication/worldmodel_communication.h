@@ -870,6 +870,7 @@ namespace vigir_worldmodel{
 
     double getLowestFootHeight() const
     {
+      return 0.15;
       tf::StampedTransform left_foot_transform;
       tf::StampedTransform right_foot_transform;
 
