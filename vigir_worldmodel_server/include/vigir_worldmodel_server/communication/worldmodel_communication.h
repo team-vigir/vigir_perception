@@ -92,9 +92,9 @@ namespace vigir_worldmodel{
 
       // Main 3D geometry providers
       octomap_binary_srv_server_ = m_nh.advertiseService("/flor/worldmodel/octomap_full", &WorldmodelCommunication::octomapBinarySrv, this);
-      octomap_binary_roi_srv_server_ = m_nh.advertiseService("/flor/worldmodel/octomap_roi", &WorldmodelCommunication::octomapBinaryRoiSrv, this);
+      octomap_binary_roi_srv_server_ = m_nh.advertiseService("/vigir_worldmodel/octomap_roi", &WorldmodelCommunication::octomapBinaryRoiSrv, this);
 
-      pointcloud_srv_server_ =  m_nh.advertiseService("/flor/worldmodel/pointcloud_roi", &WorldmodelCommunication::pointcloudSrv, this);
+      pointcloud_srv_server_ =  m_nh.advertiseService("/vigir_worldmodel/pointcloud_roi", &WorldmodelCommunication::pointcloudSrv, this);
 
 
       octomap_full_pub_ = m_nh.advertise<octomap_msgs::Octomap>("/flor/worldmodel/ocs_octomap", 1, false);
