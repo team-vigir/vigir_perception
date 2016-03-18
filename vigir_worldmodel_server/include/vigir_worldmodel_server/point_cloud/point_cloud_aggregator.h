@@ -371,6 +371,7 @@ namespace vigir_worldmodel{
       return true;
     }
 
+    /*
     void getRangeImagePlanar(boost::shared_ptr<pcl::RangeImagePlanar > range_image, const sensor_msgs::CameraInfo& camera_info, const size_t aggregation_size = 500)
     {
 
@@ -390,7 +391,7 @@ namespace vigir_worldmodel{
       max.y = -min.y;
       max.z = -min.z;
 
-      pcl::PointCloud<ScanPointT>::Ptr cloud (new pcl::PointCloud<ScanPointT>());
+      pcl::PointCloud<typename PointT>::Ptr cloud (new pcl::PointCloud<PointT>());
 
       this->getAggregateCloudBbxFiltered(cloud,"/world", min, max, 0.0, aggregation_size);
 
@@ -412,6 +413,7 @@ namespace vigir_worldmodel{
       //static pcl::visualization::RangeImageVisualizer range_image_widget ("Range image");
       //range_image_widget.showRangeImage (*range_image);
     }
+    */
 
     bool hasDataWithTimestamp(const ros::Time& time)
     {
