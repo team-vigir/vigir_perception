@@ -20,7 +20,8 @@ file(GLOB_RECURSE HEADER_FILES "include/*.h")
 
 ## Declare things to be passed to other projects
 catkin_package(
-    LIBRARIES ${PROJECT_NAME}
+    INCLUDE_DIRS include
+    #LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS roscpp std_msgs octomap_msgs octomap_ros pcl_ros vigir_perception_msgs
 )
 
