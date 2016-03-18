@@ -46,9 +46,9 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <sensor_msgs/CameraInfo.h>
+//#include <sensor_msgs/CameraInfo.h>
 
-#include <pcl/visualization/range_image_visualizer.h>
+//#include <pcl/visualization/range_image_visualizer.h>
 
 namespace vigir_worldmodel{
 
