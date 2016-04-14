@@ -78,9 +78,10 @@ namespace vigir_worldmodel{
   {
   public:
 
-    PointCloudAggregator(const boost::shared_ptr<tf::TransformListener> tf_listener, int circular_buffer_size = 4000)
+    PointCloudAggregator(const boost::shared_ptr<tf::TransformListener> tf_listener, int circular_buffer_size = 4000, bool allow_duplicate_stamps = false)
     : tf_listener_(tf_listener)
     , max_storage(circular_buffer_size)
+    , allow_duplicate_stamps_(allow_duplicate_stamps)
     {
       //Need to add a proper pointcloud to stamp comparison object
       boost::shared_ptr<pcl::PointCloud<PointT> > pc (new pcl::PointCloud<PointT>());
@@ -120,8 +121,16 @@ namespace vigir_worldmodel{
       {
         boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
-        if (pointclouds_.find(cloud_stamp) != pointclouds_.end())
-          return;
+        if (pointclouds_.find(cloud_stamp) != pointclouds_.end()){
+          if (allow_duplicate_stamps_){
+            ros::Duration one_nsec;
+            one_nsec.fromNSec(1);
+
+            cloud_stamp += one_nsec;
+          }else{
+            return;
+          }
+        }
       }
 
       size_t number_of_frames = frames_list_.size();
@@ -474,6 +483,8 @@ namespace vigir_worldmodel{
     pcl::CropBox<PointT> crop_box_filter;
 
     ros::Time last_insertion_;
+
+    bool allow_duplicate_stamps_;
   };
 
 }
