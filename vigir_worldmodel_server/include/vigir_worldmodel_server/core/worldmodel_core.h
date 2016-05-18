@@ -101,7 +101,7 @@ namespace vigir_worldmodel{
         octo_external_update_sub_ = pnh_in.subscribe("octomap_external_update", 1, &WorldmodelCore::octomapExternalUpdateCallback, this);
       }
 
-      communication_.reset(new WorldmodelCommunication(nh_in, octomap_, scan_cloud_aggregator_, unfiltered_scan_cloud_aggregator_, stereo_cloud_aggregator_, tf_listener_));
+      communication_.reset(new WorldmodelCommunication(pnh_in, octomap_, scan_cloud_aggregator_, unfiltered_scan_cloud_aggregator_, stereo_cloud_aggregator_, tf_listener_));
 
 
       // State provider publishes pose data based on tf. Moved into worldmodel to prevent many dedicated tf subscriber nodes

@@ -91,45 +91,45 @@ namespace vigir_worldmodel{
     {
 
       // Main 3D geometry providers
-      octomap_binary_srv_server_ = m_nh.advertiseService("/flor/worldmodel/octomap_full", &WorldmodelCommunication::octomapBinarySrv, this);
-      octomap_binary_roi_srv_server_ = m_nh.advertiseService("/vigir_worldmodel/octomap_roi", &WorldmodelCommunication::octomapBinaryRoiSrv, this);
+      octomap_binary_srv_server_ = m_nh.advertiseService("octomap_full", &WorldmodelCommunication::octomapBinarySrv, this);
+      octomap_binary_roi_srv_server_ = m_nh.advertiseService("octomap_roi", &WorldmodelCommunication::octomapBinaryRoiSrv, this);
 
-      pointcloud_srv_server_ =  m_nh.advertiseService("/vigir_worldmodel/pointcloud_roi", &WorldmodelCommunication::pointcloudSrv, this);
+      pointcloud_srv_server_ =  m_nh.advertiseService("pointcloud_roi", &WorldmodelCommunication::pointcloudSrv, this);
 
 
-      octomap_full_pub_ = m_nh.advertise<octomap_msgs::Octomap>("/flor/worldmodel/ocs_octomap", 1, false);
+      octomap_full_pub_ = m_nh.advertise<octomap_msgs::Octomap>("full_octomap", 1, false);
 
 
       // OCS communication
-      ocs_crop_pointcloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("/flor/worldmodel/ocs/cloud_result", 1, false);
-      ocs_crop_pointcloud_stereo_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("/flor/worldmodel/ocs/stereo_cloud_result", 1, false);
-      ocs_crop_pointcloud_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/cloud_request", 1, &WorldmodelCommunication::ocsCloudRequestCallback, this);
+      //ocs_crop_pointcloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/cloud_result", 1, false);
+      //ocs_crop_pointcloud_stereo_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/stereo_cloud_result", 1, false);
+      //ocs_crop_pointcloud_sub_ = m_nh.subscribe("ocs/cloud_request", 1, &WorldmodelCommunication::ocsCloudRequestCallback, this);
 
-      ocs_crop_octomap_pub_= m_nh.advertise<octomap_msgs::Octomap>("/flor/worldmodel/ocs/octomap_result", 1, false);
-      ocs_crop_octomap_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/octomap_request", 1, &WorldmodelCommunication::ocsOctomapRequestCallback, this);
+      ocs_crop_octomap_pub_= m_nh.advertise<octomap_msgs::Octomap>("ocs/octomap_result", 1, false);
+      ocs_crop_octomap_sub_ = m_nh.subscribe("ocs/octomap_request", 1, &WorldmodelCommunication::ocsOctomapRequestCallback, this);
 
-      ocs_dist_query_cloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("/flor/worldmodel/ocs/dist_query_pointcloud_result", 1, false);
-      ocs_dist_query_cloud_frame_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/dist_query_pointcloud_request_frame", 1, &WorldmodelCommunication::ocsDistQueryCloudRequestFrameCallback, this);
-      ocs_dist_query_cloud_world_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/dist_query_pointcloud_request_world", 1, &WorldmodelCommunication::ocsDistQueryCloudRequestWorldCallback, this);
+      ocs_dist_query_cloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/dist_query_pointcloud_result", 1, false);
+      ocs_dist_query_cloud_frame_sub_ = m_nh.subscribe("ocs/dist_query_pointcloud_request_frame", 1, &WorldmodelCommunication::ocsDistQueryCloudRequestFrameCallback, this);
+      ocs_dist_query_cloud_world_sub_ = m_nh.subscribe("ocs/dist_query_pointcloud_request_world", 1, &WorldmodelCommunication::ocsDistQueryCloudRequestWorldCallback, this);
 
-      ocs_dist_query_dist_pub_ = m_nh.advertise<std_msgs::Float64>("/flor/worldmodel/ocs/dist_query_distance_result", 1, false);
-      ocs_dist_query_dist_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/dist_query_distance_request_world", 1, &WorldmodelCommunication::ocsDistQueryDistanceRequestFrameCallback, this);
+      ocs_dist_query_dist_pub_ = m_nh.advertise<std_msgs::Float64>("ocs/dist_query_distance_result", 1, false);
+      ocs_dist_query_dist_sub_ = m_nh.subscribe("ocs/dist_query_distance_request_world", 1, &WorldmodelCommunication::ocsDistQueryDistanceRequestFrameCallback, this);
 
 
-      ocs_crop_gridmap_pub_= m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/ocs/gridmap_result", 1, false);
-      ocs_crop_gridmap_sub_ = m_nh.subscribe("/flor/worldmodel/ocs/gridmap_request", 1, &WorldmodelCommunication::ocsGridmapRequestCallback, this);
+      ocs_crop_gridmap_pub_= m_nh.advertise<nav_msgs::OccupancyGrid>("ocs/gridmap_result", 1, false);
+      ocs_crop_gridmap_sub_ = m_nh.subscribe("ocs/gridmap_request", 1, &WorldmodelCommunication::ocsGridmapRequestCallback, this);
 
       //Images
       //left_camera_lidar_depth_image_pub_ = m_nh.advertise<sensor_msgs::Image>("/multisense_sl/camera/left/lidar_depth_image",1, false);
 
       // Grid maps
-      occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map", 1, false);
-      leg_level_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map_leg_level", 1, false);
-      upper_body_level_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map_upper_body_level", 1, false);
-      //ground_lvl_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map_ground_lvl", 1, false);
-      occupancy_grid_near_robot_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("/flor/worldmodel/grid_map_near_robot", 1, false);
+      occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("grid_map", 1, false);
+      leg_level_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("grid_map_low_level", 1, false);
+      upper_body_level_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("grid_map_upper_mid_level", 1, false);
+      //ground_lvl_occupancy_grid_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("grid_map_ground_lvl", 1, false);
+      occupancy_grid_near_robot_pub_ = m_nh.advertise<nav_msgs::OccupancyGrid>("grid_map_near_robot", 1, false);
 
-      octomap_near_robot_pub_ = m_nh.advertise<octomap_msgs::Octomap>("/octomap_near_robot", 1, false);
+      octomap_near_robot_pub_ = m_nh.advertise<octomap_msgs::Octomap>("octomap_near_robot", 1, false);
 
       // Reset and others
       sys_command_sub_ = m_nh.subscribe("/syscommand", 1, &WorldmodelCommunication::sysCommandCallback, this);
@@ -140,16 +140,16 @@ namespace vigir_worldmodel{
       pnh.param("octomap_save_folder", p_octomap_save_folder_ ,std::string(""));
 
       
-      target_pose_action_server_.reset(new actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction>(
-                                       pnh,
-                                       "get_locomotion_target_pose",                                    
-                                       false));
-      target_pose_action_server_->registerGoalCallback( boost::bind(&WorldmodelCommunication::execute_locomotion_target_provider, this, boost::ref(target_pose_action_server_)));
+      //target_pose_action_server_.reset(new actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction>(
+      //                                 pnh,
+      //                                 "get_locomotion_target_pose",
+      //                                 false));
+      //target_pose_action_server_->registerGoalCallback( boost::bind(&WorldmodelCommunication::execute_locomotion_target_provider, this, boost::ref(target_pose_action_server_)));
 
-      debug_target_pose_cloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("/flor/worldmodel/debug_action_cloud", 1, false);
-      debug_target_pose_pose_pub_ = m_nh.advertise<geometry_msgs::PoseStamped>("/flor/worldmodel/debug_action_pose", 1, false);
+      //debug_target_pose_cloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("debug_action_cloud", 1, false);
+      //debug_target_pose_pose_pub_ = m_nh.advertise<geometry_msgs::PoseStamped>("debug_action_pose", 1, false);
 
-      target_pose_action_server_->start();
+      //target_pose_action_server_->start();
 
     }
 
