@@ -117,13 +117,13 @@ namespace vigir_worldmodel{
                                                                                             tf_listener_,
                                                                                             "/flor/r_arm_current_pose",
                                                                                             "/world",
-                                                                                            "/r_hand"
+                                                                                            "/"+right_wrist_link_
                                                                                             )));
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/flor/l_arm_current_pose",
                                                                                             "/world",
-                                                                                            "/l_hand"
+                                                                                            "/"+left_wrist_link_
                                                                                             )));
         state_provider_->start();
       }
@@ -202,7 +202,18 @@ namespace vigir_worldmodel{
       ros::WallTime start = ros::WallTime::now();
       ROS_INFO("Waiting for tf to become available");
 
+      //Get hand parameters from server
+      left_wrist_link_  = "/l_hand";
+      right_wrist_link_ = "/r_hand";
+
+      if(!pnh.getParam("/left_wrist_link",  left_wrist_link_) )
+          ROS_WARN("No left wrist link defined, using l_hand as default");
+      if(!pnh.getParam("/right_wrist_link", right_wrist_link_))
+          ROS_WARN("No right wrist link defined, using r_hand as default");
+
       pnh.param("required_frames", p_required_frames_list_, std::string(""));
+      p_required_frames_list_.append("/"+left_wrist_link_);
+      p_required_frames_list_.append("/"+right_wrist_link_);
 
       if (p_required_frames_list_.empty()){
         ROS_WARN("No list of tf frames to wait for specified! Could lead to transform errors during startup.");
@@ -260,6 +271,8 @@ namespace vigir_worldmodel{
 
     std::string p_root_frame_;
     std::string p_required_frames_list_;
+    std::string left_wrist_link_;
+    std::string right_wrist_link_;
     bool p_publish_frames_as_poses_;
 
     std::vector<std::string> required_frames_list_;
