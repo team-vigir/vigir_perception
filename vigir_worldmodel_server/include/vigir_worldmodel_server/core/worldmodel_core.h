@@ -211,9 +211,9 @@ namespace vigir_worldmodel{
       if(!pnh.getParam("/right_wrist_link", right_wrist_link_))
           ROS_WARN("No right wrist link defined, using r_hand as default");
 
-      pnh.param("required_frames", p_required_frames_list_, std::string(""));
+      //pnh.param("required_frames", p_required_frames_list_, std::string(""));
       p_required_frames_list_.append("/"+left_wrist_link_);
-      p_required_frames_list_.append("/"+right_wrist_link_);
+      p_required_frames_list_.append(" /"+right_wrist_link_);
 
       if (p_required_frames_list_.empty()){
         ROS_WARN("No list of tf frames to wait for specified! Could lead to transform errors during startup.");
