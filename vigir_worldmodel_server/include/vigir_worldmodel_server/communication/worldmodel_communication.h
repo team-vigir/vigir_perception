@@ -168,7 +168,7 @@ namespace vigir_worldmodel{
 
       tf::StampedTransform transform;
       try{
-        tf_listener_->lookupTransform("/world", "/pelvis", ros::Time(0), transform);
+        tf_listener_->lookupTransform("/world", "/pelvis_link", ros::Time(0), transform);
       }catch(tf::TransformException e){
         ROS_ERROR("Transform lookup failed in get locomotion pose action server goal callback: %s",e.what());
         as->setAborted();
@@ -232,7 +232,7 @@ namespace vigir_worldmodel{
       tf::StampedTransform robot_world_transform;
 
       try{
-          tf_listener_->lookupTransform("/pelvis", "/world", ros::Time(0), robot_world_transform);
+          tf_listener_->lookupTransform("/pelvis_link", "/world", ros::Time(0), robot_world_transform);
       }catch(tf::TransformException& ex){
           ROS_ERROR_STREAM( "Transform failed " << ex.what());
           as->setAborted();
@@ -308,7 +308,7 @@ namespace vigir_worldmodel{
     {
       ROS_INFO("Sending binary map data on service request");
 
-      std::string frame_name = "/pelvis";
+      std::string frame_name = "/pelvis_link";
 
       WorldmodelOctomap octo(frame_name);
 
@@ -640,7 +640,7 @@ namespace vigir_worldmodel{
         bool tf_success = false;
 
         try{
-          tf_listener_->lookupTransform("/world", "/pelvis", ros::Time(0), transform);
+          tf_listener_->lookupTransform("/world", "/pelvis_link", ros::Time(0), transform);
           tf_success = true;
         }catch(tf::TransformException& ex){
           ROS_ERROR_STREAM( "Transform when retrieving robot pose for local map: " << ex.what());
