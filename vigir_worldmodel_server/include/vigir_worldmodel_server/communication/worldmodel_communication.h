@@ -534,7 +534,7 @@ namespace vigir_worldmodel{
       if (occupancy_grid_pub_.getNumSubscribers() > 0){
         nav_msgs::OccupancyGrid map;
 
-        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + 0.15, lowest_foot_height + 1.5)){
+        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + 0.4, lowest_foot_height + 1.0)){
           occupancy_grid_pub_.publish (map);
         }
       }
