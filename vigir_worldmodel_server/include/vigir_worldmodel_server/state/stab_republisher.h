@@ -125,11 +125,11 @@ public:
         tfb_.sendTransform(stab_base_link_transform);
 
 
-        stab_world_transform.child_frame_id_ = "stab_world";
-        stab_world_transform.frame_id_ = "world";
-        stab_world_transform.stamp_ = robot_world_transform.stamp_;
+        //stab_world_transform.child_frame_id_ = "stab_world";
+        //stab_world_transform.frame_id_ = "world";
+        //stab_world_transform.stamp_ = robot_world_transform.stamp_;
 
-        tfb_.sendTransform(stab_world_transform);
+        //tfb_.sendTransform(stab_world_transform);
 
 
 
