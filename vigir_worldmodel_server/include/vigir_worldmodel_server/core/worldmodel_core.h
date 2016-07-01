@@ -44,6 +44,7 @@
 #include <vigir_worldmodel_server/state/transform_service_provider.h>
 #include <vigir_worldmodel_server/state/state_provider.h>
 #include <vigir_worldmodel_server/state/tf_pose_republisher.h>
+#include <vigir_worldmodel_server/state/stab_republisher.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
@@ -119,6 +120,11 @@ namespace vigir_worldmodel{
                                                                                             "/world",
                                                                                             "/base_link"
                                                                                             )));
+
+        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new StabRepublisher(
+                                                                                            tf_listener_,
+                                                                                            "/base_link",
+                                                                                            "/base_stabilized")));
        /*
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
