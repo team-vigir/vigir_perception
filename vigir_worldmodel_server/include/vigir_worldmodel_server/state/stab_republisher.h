@@ -86,7 +86,7 @@ public:
         tf::StampedTransform robot_world_transform;
 
         try{
-            tf_listener_->lookupTransform("/world", p_base_frame_name_, ros::Time(0), robot_world_transform);
+            tf_listener_->lookupTransform("/odom", p_base_frame_name_, ros::Time(0), robot_world_transform);
         }catch(tf::TransformException& ex){
             ROS_ERROR_STREAM( "Transform failed " << ex.what());
             return;

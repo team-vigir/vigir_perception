@@ -80,7 +80,7 @@ namespace vigir_worldmodel{
       pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
 
 
-      waitForTf(pnh_in);
+      //waitForTf(pnh_in);
 
       octomap_.reset(new WorldmodelOctomap(p_root_frame_));
 
