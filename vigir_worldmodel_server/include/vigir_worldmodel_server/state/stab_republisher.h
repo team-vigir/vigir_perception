@@ -86,7 +86,7 @@ public:
         tf::StampedTransform robot_world_transform;
 
         try{
-            tf_listener_->lookupTransform(p_base_frame_name_, "/world", ros::Time(0), robot_world_transform);
+            tf_listener_->lookupTransform("/world", p_base_frame_name_, ros::Time(0), robot_world_transform);
         }catch(tf::TransformException& ex){
             ROS_ERROR_STREAM( "Transform failed " << ex.what());
             return;
@@ -103,7 +103,7 @@ public:
 
         tf::StampedTransform stab_base_link_transform;
 
-        stab_base_link_transform.setData(stab_world_transform.inverse() * robot_world_transform);
+        stab_base_link_transform.setData((stab_world_transform.inverse() * robot_world_transform).inverse());
 
 
 
