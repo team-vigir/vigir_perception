@@ -141,7 +141,7 @@ public:
         //ROS_INFO(" source pose (%s): %f, %f, %f ---> target pose (%s): %f, %f, %f",
         //         pose_source_.header.frame_id.c_str(), pose_source_.pose.position.x, pose_source_.pose.position.y, pose_source_.pose.position.z,
         //         pose_out.header.frame_id.c_str(),pose_out.pose.position.x, pose_out.pose.position.y, pose_out.pose.position.z );
-        pose_pub_.publish(pose_out);
+        //pose_pub_.publish(pose_out);
     }
     catch (tf::TransformException ex){
          ROS_ERROR("Pose republisher tf failure::  %s",ex.what());
