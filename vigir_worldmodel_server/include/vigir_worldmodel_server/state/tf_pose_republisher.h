@@ -85,7 +85,7 @@ public:
         pose_pub_.publish(pose_out);
     }
     catch (tf::TransformException ex){
-         ROS_ERROR("Pose republisher tf failure::  %s",ex.what());
+         ROS_WARN_THROTTLE(5.0, "Pose republisher tf failure::  %s. This message is throttled.",ex.what());
     }
 
   }

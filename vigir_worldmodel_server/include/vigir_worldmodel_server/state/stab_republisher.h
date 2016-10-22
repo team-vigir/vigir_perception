@@ -88,7 +88,7 @@ public:
         try{
             tf_listener_->lookupTransform("/odom", p_base_frame_name_, ros::Time(0), robot_world_transform);
         }catch(tf::TransformException& ex){
-            ROS_ERROR_STREAM( "Transform in stab publisher failed " << ex.what());
+            ROS_WARN_STREAM_THROTTLE(5.0, "Transform in stab publisher failed " << ex.what() << " This message is throttled.");
             return;
         }
 
