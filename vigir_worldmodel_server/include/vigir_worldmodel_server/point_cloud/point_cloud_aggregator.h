@@ -156,6 +156,11 @@ namespace vigir_worldmodel{
       pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
       //pointclouds_[cloud_stamp] = PointCloudContainer<PointT> (cloud, transforms);
       last_insertion_ = cloud_stamp;
+
+      while (pointclouds_.size() > max_storage){
+        pointclouds_.erase(pointclouds_.begin());
+        ROS_Debug("Removed old entry from worldmodel");
+      }
       //}
       //else{
       //  ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
