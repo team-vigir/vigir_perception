@@ -159,7 +159,7 @@ namespace vigir_worldmodel{
 
       while (pointclouds_.size() > max_storage){
         pointclouds_.erase(pointclouds_.begin());
-        ROS_Debug("Removed old entry from worldmodel");
+        //ROS_DEBUG("Removed old entry from worldmodel");
       }
       //}
       //else{
