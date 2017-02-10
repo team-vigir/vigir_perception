@@ -168,7 +168,7 @@ namespace vigir_worldmodel{
 
         pcl::PointCloud<ScanPointT>::Ptr cloud;
         cloud.reset (new pcl::PointCloud<ScanPointT>());
-        if (scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_,2000)){
+        if (scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_, p_root_frame_, 2000)){
           point_cloud_vis_.publishVis(*cloud);
         }
 
@@ -181,7 +181,7 @@ namespace vigir_worldmodel{
 
         pcl::PointCloud<ScanPointT>::Ptr cloud;
         cloud.reset (new pcl::PointCloud<ScanPointT>());
-        if (unfiltered_scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_,2000)){
+        if (unfiltered_scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_, "",2000)){
           unfiltered_point_cloud_vis_.publishVis(*cloud);
         }
 

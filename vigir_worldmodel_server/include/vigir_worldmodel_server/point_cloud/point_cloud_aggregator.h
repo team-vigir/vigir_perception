@@ -139,9 +139,9 @@ namespace vigir_worldmodel{
       transforms.resize(number_of_frames);
 
       try {
-        tf_listener_->waitForTransform(frames_list_[0], cloud->header.frame_id, cloud_stamp, ros::Duration(3.0));
+        
         for (size_t i = 0; i < number_of_frames; ++i){
-
+          tf_listener_->waitForTransform(frames_list_[i], cloud->header.frame_id, cloud_stamp, ros::Duration(3.0));
           tf_listener_->lookupTransform(frames_list_[i], cloud->header.frame_id, cloud_stamp, transforms[i]);
         }
       } catch(tf::TransformException& ex){
@@ -168,13 +168,26 @@ namespace vigir_worldmodel{
       //}
     }
 
-    bool getAggregateCloud(const boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, size_t aggregation_size= 500)
+    bool getAggregateCloud(boost::shared_ptr<pcl::PointCloud<PointT> > cloud, const std::string& frame_id, const std::string& aggregation_frame_id = std::string(""), size_t aggregation_size= 500)
     {
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
       size_t size = pointclouds_.size();
 
-      int frame_id_idx = getFrameId(frame_id);
+
+      // Set to true if using different aggregation from final publish frame
+      bool diff_aggregation_frame = false;
+
+
+      int frame_id_idx;
+
+      if (!aggregation_frame_id.empty() && aggregation_frame_id != frame_id)
+      {
+        frame_id_idx = getFrameId(aggregation_frame_id);
+        diff_aggregation_frame = true;
+      }else{
+        frame_id_idx = getFrameId(frame_id);
+      }
 
       if (size == 0 || frame_id_idx < 0){
         ROS_WARN("Couldn't create aggregate cloud. Number of cached pointclouds: %d Requested frame_id: %s", (int)size, frame_id.c_str());
@@ -205,6 +218,32 @@ namespace vigir_worldmodel{
         *cloud += tmp_cloud;
       }
 
+      if (diff_aggregation_frame)
+      {
+          ros::Time cloud_time = ros::Time::now();
+
+          if (tf_listener_->waitForTransform(frame_id, aggregation_frame_id, cloud_time, ros::Duration(0.5))){
+
+            tf::StampedTransform publish_transform;
+            tf_listener_->lookupTransform(frame_id, aggregation_frame_id, cloud_time, publish_transform);
+
+            Eigen::Matrix4f publish_transform_eigen;
+            pcl_ros::transformAsMatrix(publish_transform, publish_transform_eigen);
+
+            pcl::PointCloud<pcl::PointXYZI>::Ptr tmp_transformed_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZI> >();
+
+            pcl::transformPointCloud(*cloud, *tmp_transformed_cloud, publish_transform_eigen);
+
+            cloud = tmp_transformed_cloud;
+
+            ROS_INFO("Aggregated cloud in %s frame transformed into %s frame", aggregation_frame_id.c_str(), frame_id.c_str());
+          }else{
+            ROS_WARN("Transform lookup for transforming aggregated cloud timed out!");
+            return false;
+          }
+
+      }
+
       //PointCloudContainer tmp(ros::Time::now());
       //std::binary_search (pointclouds_.begin(), pointclouds_.end(), tmp, pointcloud_timestamp_compare);
 
@@ -214,12 +253,12 @@ namespace vigir_worldmodel{
       return true;
     }
 
-    bool getAggregateCloudBbxFiltered(boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, const geometry_msgs::Point& bbx_min, const geometry_msgs::Point& bbx_max, double voxel_grid_size, size_t aggregation_size= 500)
+    bool getAggregateCloudBbxFiltered(boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, const geometry_msgs::Point& bbx_min, const geometry_msgs::Point& bbx_max, double voxel_grid_size, const std::string& aggregation_frame_id = "", size_t aggregation_size= 500)
     {
       ROS_DEBUG("bbx_min: %f %f %f",bbx_min.x,bbx_min.y,bbx_min.z);
       ROS_DEBUG("bbx_max: %f %f %f",bbx_max.x,bbx_max.y,bbx_max.z);
 
-      if (getAggregateCloud(cloud, frame_id, aggregation_size)){
+      if (getAggregateCloud(cloud, frame_id, aggregation_frame_id, aggregation_size)){
 
         crop_box_filter.setInputCloud(cloud);
         crop_box_filter.setMin(Eigen::Vector4f(bbx_min.x,bbx_min.y,bbx_min.z,1));

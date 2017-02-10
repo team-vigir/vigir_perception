@@ -170,7 +170,7 @@ namespace vigir_worldmodel{
 
       tf::StampedTransform transform;
       try{
-        tf_listener_->lookupTransform("/world", "/pelvis", ros::Time(0), transform);
+        tf_listener_->lookupTransform("world", "pelvis", ros::Time(0), transform);
       }catch(tf::TransformException e){
         ROS_ERROR("Transform lookup failed in get locomotion pose action server goal callback: %s",e.what());
         as->setAborted();
@@ -199,7 +199,7 @@ namespace vigir_worldmodel{
 
       ROS_DEBUG("Min: %f %f %f Max: %f %f %f", min.x, min.y, min.z, max.x, max.y, max.z);
 
-      if (!scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min, max, 0.03, aggregation_size)){
+      if (!scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "world", min, max, 0.03, "", aggregation_size)){
         as->setAborted();
         return;
       }
@@ -417,7 +417,7 @@ namespace vigir_worldmodel{
 
       ROS_INFO("Pointcloud data service request called with aggregation size request %d and used aggregation size %d", (int)req.aggregation_size,  (int)aggregation_size);
 
-      if (scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, req.region_req.header.frame_id, req.region_req.bounding_box_min, req.region_req.bounding_box_max, req.region_req.resolution, aggregation_size)){
+      if (scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, req.region_req.header.frame_id, req.region_req.bounding_box_min, req.region_req.bounding_box_max, req.region_req.resolution, req.region_req.aggregation_frame_id,  aggregation_size)){
         pcl::toROSMsg(*cloud, res.cloud);
         return true;
       }else{
@@ -440,19 +440,19 @@ namespace vigir_worldmodel{
 
       if (msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::LIDAR_FILTERED){
         pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
-        scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, aggregation_size);
+        scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, "", aggregation_size);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_pub_.publish(pc_ros);
       }else if(msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::LIDAR_UNFILTERED){
         pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
-        unfiltered_scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, aggregation_size);
+        unfiltered_scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, "", aggregation_size);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_pub_.publish(pc_ros);
       }else if(msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::STEREO){
         pcl::PointCloud<StereoPointT>::Ptr cloud(new pcl::PointCloud<StereoPointT>());
-        stereo_head_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, 1);
+        stereo_head_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, "", 1);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_stereo_pub_.publish(pc_ros);
