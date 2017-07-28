@@ -134,7 +134,7 @@ namespace vigir_worldmodel{
       // Reset and others
       sys_command_sub_ = m_nh.subscribe("/syscommand", 1, &WorldmodelCommunication::sysCommandCallback, this);
 
-      pub_timer_ = m_nh.createTimer(ros::Duration(5.0), &WorldmodelCommunication::pubTimerCallback, this, false);
+      pub_timer_ = m_nh.createTimer(ros::Duration(2.0), &WorldmodelCommunication::pubTimerCallback, this, false);
 
       ros::NodeHandle pnh("~");
       pnh.param("octomap_save_folder", p_octomap_save_folder_ ,std::string(""));
