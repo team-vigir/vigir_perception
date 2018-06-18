@@ -74,6 +74,9 @@ namespace vigir_worldmodel{
     , point_cloud_vis_(pnh_in)
     , unfiltered_point_cloud_vis_(pnh_in, "unfiltered_cloud_vis")
     {
+      // Ignore PCL warning spam
+      pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
+
       tf_listener_.reset(new tf::TransformListener());
 
       pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
