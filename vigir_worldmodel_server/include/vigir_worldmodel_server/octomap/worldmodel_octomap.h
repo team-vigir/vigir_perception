@@ -128,9 +128,10 @@ namespace vigir_worldmodel{
       //Reset tmp storage
       m_keyRay.reset();
 
-      ros::Time time;
-      time.fromNSec(cloud.header.stamp*1e3);
+      ros::Time time = pcl_conversions::fromPCL(cloud.header.stamp);
       map.setLastUpdateStamp(time);
+
+      //ROS_INFO("time: %u", time.toNSec());
 
       for (pcl::PointCloud<ScanPointT>::const_iterator it = cloud.begin(); it != cloud.end(); ++it){
         octomap::point3d point(it->x, it->y, it->z);
@@ -144,6 +145,8 @@ namespace vigir_worldmodel{
           if (m_octree->computeRayKeys(sensorOrigin, point, m_keyRay)){
             free_cells.insert(m_keyRay.begin(), m_keyRay.end());
           }
+          //m_keyRay.reset();
+
           // occupied endpoint
           octomap::OcTreeKey key;
           if (m_octree->coordToKeyChecked(point, key)){
