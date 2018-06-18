@@ -49,7 +49,7 @@ namespace vigir_worldmodel{
       m_thresMin = 0.12;
       m_thresMax = 0.97;
       */
-      m_maxRange = 10.0;
+      m_maxRange = max_range;
 
       m_octree.reset(new octomap::OcTree( m_res));
 

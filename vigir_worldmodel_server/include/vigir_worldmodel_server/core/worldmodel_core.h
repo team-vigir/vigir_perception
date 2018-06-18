@@ -81,11 +81,13 @@ namespace vigir_worldmodel{
 
       pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
       pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
+      pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
+
 
 
       //waitForTf(pnh_in);
 
-      octomap_.reset(new WorldmodelOctomap(p_root_frame_));
+      octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
 
       scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 8000));
       scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(scan_cloud_aggregator_, "/scan_cloud_filtered"));
@@ -282,6 +284,7 @@ namespace vigir_worldmodel{
 
     std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
+    double p_octomap_max_range_;
 
     ros::Timer vis_timer_;
     ros::Timer octo_update_timer_;
