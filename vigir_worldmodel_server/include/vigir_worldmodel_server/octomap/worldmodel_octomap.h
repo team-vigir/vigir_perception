@@ -34,7 +34,7 @@
 #include <octomap/octomap.h>
 #include <octomap_ros/conversions.h>
 #include <octomap_msgs/conversions.h>
-#include <pcl/ros/conversions.h>
+#include <pcl/conversions.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
