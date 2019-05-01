@@ -46,6 +46,7 @@
 
 #include <nav_msgs/OccupancyGrid.h>
 #include <octomap_msgs/Octomap.h>
+#include <hector_std_msgs/StringService.h>
 
 namespace vigir_worldmodel{
 
@@ -58,17 +59,24 @@ namespace vigir_worldmodel{
     , updated_from_external_(false)
     {
       map.setLastUpdateStamp(ros::Time(0));
+      ros::NodeHandle pnh("~");
+      save_map_server_ = pnh.advertiseService("save_map", &WorldmodelOctomap::saveMapCb, this);
     }
 
     ~WorldmodelOctomap()
     {}
 
-    void setUpdatedFromExternal(bool val){ updated_from_external_ = val;};
-    const bool isUpdatedFromExternal() const { return updated_from_external_; };
+    void setUpdatedFromExternal(bool val){ updated_from_external_ = val;}
+    bool isUpdatedFromExternal() const { return updated_from_external_; }
 
     void reset()
     {
       map.reset();
+    }
+
+    bool saveMapCb(hector_std_msgs::StringServiceRequest& request, hector_std_msgs::StringServiceResponse& response) {
+      writeOctomapToFile(request.param);
+      return true;
     }
 
     bool updateOctomap(const octomap_msgs::Octomap& msg){
@@ -412,6 +420,7 @@ namespace vigir_worldmodel{
 
   protected:
 
+    ros::ServiceServer save_map_server_;
     octomap::KeyRay m_keyRay;  // temp storage for ray casting
 
     OctomapContainer map;
