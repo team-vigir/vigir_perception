@@ -35,6 +35,7 @@
 #include <octomap_ros/conversions.h>
 #include <octomap_msgs/conversions.h>
 #include <pcl/conversions.h>
+#include <iomanip>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
@@ -55,12 +56,10 @@ namespace vigir_worldmodel{
     //typedef octomap_msgs::BoundingBoxQuery BBXSrv;
 
     WorldmodelOctomap(const std::string& frame_id, double res = 0.05, double max_range = 10.0)
-    : map(frame_id, res, max_range)
-    , updated_from_external_(false)
+    : map(frame_id, res, max_range), updated_from_external_(false), pnh_("~")
     {
       map.setLastUpdateStamp(ros::Time(0));
-      ros::NodeHandle pnh("~");
-      save_map_server_ = pnh.advertiseService("save_map", &WorldmodelOctomap::saveMapCb, this);
+      save_map_server_ = pnh_.advertiseService("save_map", &WorldmodelOctomap::saveMapCb, this);
     }
 
     ~WorldmodelOctomap()
@@ -68,6 +67,13 @@ namespace vigir_worldmodel{
 
     void setUpdatedFromExternal(bool val){ updated_from_external_ = val;}
     bool isUpdatedFromExternal() const { return updated_from_external_; }
+
+    void startPeriodicMapSaving(std::string folder, const ros::Duration& period) {
+      save_folder_ = folder;
+      if (save_folder_ != "") {
+        save_map_timer_ = pnh_.createTimer(period, &WorldmodelOctomap::saveMapTimerCb, this);
+      }
+    }
 
     void reset()
     {
@@ -77,6 +83,15 @@ namespace vigir_worldmodel{
     bool saveMapCb(hector_std_msgs::StringServiceRequest& request, hector_std_msgs::StringServiceResponse& response) {
       writeOctomapToFile(request.param);
       return true;
+    }
+
+    void saveMapTimerCb(const ros::TimerEvent& e) {
+      auto t = std::time(nullptr);
+      auto tm = *std::localtime(&t);
+
+      std::stringstream filepath;
+      filepath << save_folder_ << "/octomap-" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".bt";
+      writeOctomapToFile(filepath.str());
     }
 
     bool updateOctomap(const octomap_msgs::Octomap& msg){
@@ -419,7 +434,7 @@ namespace vigir_worldmodel{
     }
 
   protected:
-
+    ros::NodeHandle pnh_;
     ros::ServiceServer save_map_server_;
     octomap::KeyRay m_keyRay;  // temp storage for ray casting
 
@@ -430,6 +445,8 @@ namespace vigir_worldmodel{
     octomap::OcTreeKey m_paddedMinKey;    
     unsigned int grid_map_width_;
     bool updated_from_external_;
+    std::string save_folder_;
+    ros::Timer save_map_timer_;
   };
 
 }
