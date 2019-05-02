@@ -81,17 +81,29 @@ namespace vigir_worldmodel{
     }
 
     bool saveMapCb(hector_std_msgs::StringServiceRequest& request, hector_std_msgs::StringServiceResponse& response) {
-      writeOctomapToFile(request.param);
+      std::string filepath;
+      if (request.param != "") {
+        filepath = request.param;
+      } else {
+        filepath = generateTimeStampedSavePath();
+
+      }
+      writeOctomapToFile(filepath);
       return true;
     }
 
     void saveMapTimerCb(const ros::TimerEvent& e) {
+      std::string filepath = generateTimeStampedSavePath();
+      writeOctomapToFile(filepath);
+    }
+
+    std::string generateTimeStampedSavePath() const {
       auto t = std::time(nullptr);
       auto tm = *std::localtime(&t);
 
       std::stringstream filepath;
       filepath << save_folder_ << "/octomap-" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".bt";
-      writeOctomapToFile(filepath.str());
+      return filepath.str();
     }
 
     bool updateOctomap(const octomap_msgs::Octomap& msg){
