@@ -41,6 +41,7 @@
 #include <pcl/range_image/range_image_planar.h>
 
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
 
 #include <boost/circular_buffer.hpp>
 
@@ -116,6 +117,7 @@ namespace vigir_worldmodel{
 
     void addCloud(boost::shared_ptr<pcl::PointCloud<PointT> > cloud)
     {
+
       ros::Time cloud_stamp = pcl_conversions::fromPCL(cloud->header.stamp);
 
       {
@@ -159,7 +161,7 @@ namespace vigir_worldmodel{
 
       while (pointclouds_.size() > max_storage){
         pointclouds_.erase(pointclouds_.begin());
-        //ROS_DEBUG("Removed old entry from worldmodel");
+        ROS_WARN_STREAM("Removed old entry from worldmodel, max_storage: " << max_storage << ", current size: " << pointclouds_.size());
       }
       //}
       //else{
@@ -230,7 +232,7 @@ namespace vigir_worldmodel{
             Eigen::Matrix4f publish_transform_eigen;
             pcl_ros::transformAsMatrix(publish_transform, publish_transform_eigen);
 
-            pcl::PointCloud<pcl::PointXYZI>::Ptr tmp_transformed_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZI> >();
+            pcl::PointCloud<pcl::PointXYZRGBA>::Ptr tmp_transformed_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGBA> >();
 
             pcl::transformPointCloud(*cloud, *tmp_transformed_cloud, publish_transform_eigen);
 
@@ -288,6 +290,30 @@ namespace vigir_worldmodel{
         return false;
       }
     }
+
+
+    bool getAggregateCloudVoxelFiltered(boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, double voxel_grid_size, const std::string& aggregation_frame_id = "", size_t aggregation_size= 500)
+    {
+
+      if (getAggregateCloud(cloud, frame_id, aggregation_frame_id, aggregation_size)){
+
+        if (voxel_grid_size > 0.000001){
+          pcl::VoxelGrid<PointT> vox_grid;
+          vox_grid.setInputCloud (cloud);
+          vox_grid.setLeafSize (voxel_grid_size, voxel_grid_size, voxel_grid_size);
+          //vox_grid.filter (*cloud); // Please see this http://www.pcl-developers.org/Possible-problem-in-new-VoxelGrid-implementation-from-PCL-1-5-0-td5490361.html
+          const boost::shared_ptr<pcl::PointCloud<PointT> > tempCloud (new pcl::PointCloud<PointT>());
+          vox_grid.filter (*tempCloud);
+          cloud = tempCloud;
+        }
+
+        return true;
+      }else{
+        ROS_WARN("Couldn't get aggregate point cloud in voxel cloud generator for frame_id: %s", frame_id.c_str());
+        return false;
+      }
+    }
+
 
     /**
      * Return a single cloud from the stored circular buffer. The index variable 0 indicates the most recent cloud
@@ -500,9 +526,28 @@ namespace vigir_worldmodel{
     void writeCloudToFile(const std::string& name)
     {
       boost::shared_ptr<pcl::PointCloud<PointT> > cloud (new pcl::PointCloud<PointT>());
-      this->getAggregateCloud(cloud, "/world");
+      this->getAggregateCloud(cloud, "/world", std::string(""), 30000);
 
-      pcl::io::savePCDFile(name, *cloud);
+      if(!cloud->empty()){
+        pcl::io::savePCDFile(name+".pcd", *cloud);
+        pcl::io::savePLYFile(name+".ply", *cloud);
+
+        ROS_INFO_STREAM("Writing pointcloud to " << name);
+      } else {
+        ROS_ERROR_STREAM("Couldn't write pointcloud as cloud does not contain any data!");
+      }
+
+      this->getAggregateCloudVoxelFiltered(cloud, "/world", 0.01, std::string(""), 30000);
+
+      if(!cloud->empty()){
+        pcl::io::savePCDFile(name + "_filtered" + ".pcd", *cloud);
+        pcl::io::savePLYFile(name + "_filtered" + ".ply", *cloud);
+
+        ROS_INFO_STREAM("Writing pointcloud to " << name << "_filtered");
+      } else {
+        ROS_ERROR_STREAM("Couldn't write filtered pointcloud as cloud does not contain any data!");
+      }
+
     }
 
     size_t size() const { return pointclouds_.size(); };

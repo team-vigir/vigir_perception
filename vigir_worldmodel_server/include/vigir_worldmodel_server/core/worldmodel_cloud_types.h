@@ -30,11 +30,12 @@
 #define WORLDMODEL_CLOUD_TYPES__
 
 #include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 /**
  * Set point types used by worldmodel for scans and stereo here (stereo can be with or without color)
  */
-typedef pcl::PointXYZI ScanPointT;
-typedef pcl::PointXYZI StereoPointT;
+typedef pcl::PointXYZRGBA ScanPointT;
+typedef pcl::PointXYZRGBA StereoPointT;
 
 #endif

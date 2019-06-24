@@ -999,6 +999,24 @@ namespace vigir_worldmodel{
         */
       }else if (msg->data == "save_pointcloud"){
         std::string file_name;
+
+        if(p_octomap_save_folder_.empty()){
+          ROS_WARN("No pointcloud save folder specified, not saving pointcloud");
+        }else{
+
+          auto t = std::time(nullptr);
+          auto tm = *std::localtime(&t);
+
+          std::stringstream time_string;
+          time_string << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+
+          file_name = p_octomap_save_folder_ + "/pointcloud_" + time_string.str();
+
+          scan_cloud_aggregator_->writeCloudToFile(file_name);
+        }
+
+
+
         /*
         if (FileUtils::getTimeBasedUniqueFilename(p_octomap_save_folder_, "pointcloud", ".pcd", file_name)){
           ROS_INFO("Writing pointcloud to %s", file_name.c_str());
@@ -1007,6 +1025,7 @@ namespace vigir_worldmodel{
           ROS_WARN("No pointcloud save folder specified, not saving pointcloud");
         }
         */
+
       }
     }
 
@@ -1044,6 +1063,7 @@ namespace vigir_worldmodel{
     {
       tf::StampedTransform left_foot_transform;
       //tf::StampedTransform right_foot_transform;
+      tf_listener_->waitForTransform("/world", "/base_link", ros::Time(0), ros::Duration(0.1));
 
       try{
         tf_listener_->lookupTransform("/world", "/base_link", ros::Time(0), left_foot_transform);
