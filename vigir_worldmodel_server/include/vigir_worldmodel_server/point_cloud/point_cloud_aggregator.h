@@ -232,7 +232,7 @@ namespace vigir_worldmodel{
             Eigen::Matrix4f publish_transform_eigen;
             pcl_ros::transformAsMatrix(publish_transform, publish_transform_eigen);
 
-            pcl::PointCloud<pcl::PointXYZRGBA>::Ptr tmp_transformed_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGBA> >();
+            typename pcl::PointCloud<PointT>::Ptr tmp_transformed_cloud = boost::make_shared<pcl::PointCloud<PointT> >();
 
             pcl::transformPointCloud(*cloud, *tmp_transformed_cloud, publish_transform_eigen);
 
