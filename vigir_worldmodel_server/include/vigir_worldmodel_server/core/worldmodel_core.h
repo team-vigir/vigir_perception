@@ -89,7 +89,7 @@ namespace vigir_worldmodel{
 
       octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
 
-      scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 30000));
+      scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 8000));
       scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(scan_cloud_aggregator_, "/scan_cloud_filtered"));
 
       unfiltered_scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 4000));
