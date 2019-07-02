@@ -95,6 +95,8 @@ namespace vigir_worldmodel{
 
       pnh.param("aggregator_frames", p_aggregator_frames_list_, std::string(""));
 
+      pnh.param("voxel_grid_size", voxel_grid_size_, 0.05);
+
 
       boost::algorithm::split(frames_list_, p_aggregator_frames_list_, boost::is_any_of("\t "));
 
@@ -151,18 +153,48 @@ namespace vigir_worldmodel{
         return;
       }
 
-      boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
+      {
+        boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
-      //if (cloud_stamp > last_insertion_){
-        //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
-      pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
-      //pointclouds_[cloud_stamp] = PointCloudContainer<PointT> (cloud, transforms);
-      last_insertion_ = cloud_stamp;
-
-      while (pointclouds_.size() > max_storage){
-        pointclouds_.erase(pointclouds_.begin());
-        ROS_WARN_STREAM("Removed old entry from worldmodel, max_storage: " << max_storage << ", current size: " << pointclouds_.size());
+        //if (cloud_stamp > last_insertion_){
+          //pointclouds_.push_back(PointCloudContainer<PointT> (cloud, transforms));
+        pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (cloud, transforms)) );
+        //pointclouds_[cloud_stamp] = PointCloudContainer<PointT> (cloud, transforms);
+        last_insertion_ = cloud_stamp;
       }
+
+
+      if(pointclouds_.size() > max_storage){
+
+        ROS_INFO_STREAM("aggregate and filter cloud as max_storage is reached");
+
+        // aggregate up to now stored point clouds and run voxelfilter
+        boost::shared_ptr<pcl::PointCloud<PointT> > tmp_cloud (new pcl::PointCloud<PointT>());
+        this->getAggregateCloudVoxelFiltered(tmp_cloud, "/world", voxel_grid_size_, std::string(""), max_storage);
+
+        {
+          boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
+
+          // delete all old pointclouds
+          pointclouds_.clear();
+
+          // add aggregated and filtered cloud to pointcloud list
+          std::vector<tf::StampedTransform> tmp_transforms;
+          tf::StampedTransform tmp_transform;
+          tmp_transform.setIdentity();
+          tmp_transforms.push_back(tmp_transform);
+
+          pointclouds_.insert(std::pair<ros::Time, PointCloudContainer<PointT> >(cloud_stamp, PointCloudContainer<PointT> (tmp_cloud, tmp_transforms)) );
+        }
+
+      }
+
+
+      //while (pointclouds_.size() > max_storage){
+      //  pointclouds_.erase(pointclouds_.begin());
+      //  ROS_WARN_STREAM("Removed old entry from worldmodel, max_storage: " << max_storage << ", current size: " << pointclouds_.size());
+      //}
+
       //}
       //else{
       //  ROS_WARN("Stamp of point cloud to be inserted older or same as previous one, not inserting.");
@@ -525,28 +557,42 @@ namespace vigir_worldmodel{
 
     void writeCloudToFile(const std::string& name)
     {
+      ROS_INFO_STREAM("Start saving cloud...");
+
       boost::shared_ptr<pcl::PointCloud<PointT> > cloud (new pcl::PointCloud<PointT>());
-      this->getAggregateCloud(cloud, "/world", std::string(""), 30000);
 
-      if(!cloud->empty()){
-        pcl::io::savePCDFile(name+".pcd", *cloud);
-        pcl::io::savePLYFile(name+".ply", *cloud);
+      bool save_unfiltered_cloud = false;
+      bool save_filtered_cloud = true;
 
-        ROS_INFO_STREAM("Writing pointcloud to " << name);
-      } else {
-        ROS_ERROR_STREAM("Couldn't write pointcloud as cloud does not contain any data!");
+      if(save_unfiltered_cloud){
+
+        this->getAggregateCloud(cloud, "/world", std::string(""), max_storage);
+
+        if(!cloud->empty()){
+          //pcl::io::savePCDFile(name+".pcd", *cloud);
+          pcl::io::savePLYFile(name+".ply", *cloud);
+
+          ROS_INFO_STREAM("Writing pointcloud to " << name);
+        } else {
+          ROS_ERROR_STREAM("Couldn't write pointcloud as cloud does not contain any data!");
+        }
       }
 
-      this->getAggregateCloudVoxelFiltered(cloud, "/world", 0.01, std::string(""), 30000);
 
-      if(!cloud->empty()){
-        pcl::io::savePCDFile(name + "_filtered" + ".pcd", *cloud);
-        pcl::io::savePLYFile(name + "_filtered" + ".ply", *cloud);
+      if(save_filtered_cloud){
+        this->getAggregateCloudVoxelFiltered(cloud, "/world", voxel_grid_size_, std::string(""), max_storage);
 
-        ROS_INFO_STREAM("Writing pointcloud to " << name << "_filtered");
-      } else {
-        ROS_ERROR_STREAM("Couldn't write filtered pointcloud as cloud does not contain any data!");
+        if(!cloud->empty()){
+          //pcl::io::savePCDFile(name + "_filtered" + ".pcd", *cloud);
+          pcl::io::savePLYFile(name + "_filtered" + ".ply", *cloud);
+
+          ROS_INFO_STREAM("Writing pointcloud to " << name << "_filtered");
+        } else {
+          ROS_ERROR_STREAM("Couldn't write filtered pointcloud as cloud does not contain any data!");
+        }
       }
+
+
 
     }
 
@@ -570,6 +616,8 @@ namespace vigir_worldmodel{
     std::vector<std::string> frames_list_;
 
     pcl::CropBox<PointT> crop_box_filter;
+
+    double voxel_grid_size_;
 
     ros::Time last_insertion_;
 
