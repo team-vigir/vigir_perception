@@ -60,11 +60,10 @@ namespace vigir_worldmodel{
     {
       ros::Rate r(loop_rate);
 
-      ros::Time time = ros::Time(0);
-
       while(ros::ok())
       {
         size_t size = republishers_.size();
+        ros::Time time = ros::Time::now();
 
         for (size_t i = 0; i < size; ++i){
           republishers_[i]->execute(time);

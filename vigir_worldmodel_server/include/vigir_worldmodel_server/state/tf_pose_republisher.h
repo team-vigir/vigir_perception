@@ -78,6 +78,7 @@ public:
 
     geometry_msgs::PoseStamped pose_out;
     try {
+        tf_listener_->waitForTransform(p_target_frame_name_, pose_source_.header.frame_id, time, ros::Duration(0.1));
         tf_listener_->transformPose(p_target_frame_name_, pose_source_, pose_out);
         //ROS_INFO(" source pose (%s): %f, %f, %f ---> target pose (%s): %f, %f, %f",
         //         pose_source_.header.frame_id.c_str(), pose_source_.pose.position.x, pose_source_.pose.position.y, pose_source_.pose.position.z,
