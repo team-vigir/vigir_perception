@@ -125,7 +125,7 @@ namespace vigir_worldmodel{
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/robot_pose",
-                                                                                            "/world",
+                                                                                            p_root_frame_,
                                                                                             "/base_link"
                                                                                             )));
 
@@ -137,14 +137,14 @@ namespace vigir_worldmodel{
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/flor/r_arm_current_pose",
-                                                                                            "/world",
+                                                                                            p_root_frame_,
                                                                                             "/r_hand"
                                                                                             )));
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/flor/l_arm_current_pose",
-                                                                                            "/world",
+                                                                                            p_root_frame_,
                                                                                             "/l_hand"
                                                                                           )));
                                                                                           */
