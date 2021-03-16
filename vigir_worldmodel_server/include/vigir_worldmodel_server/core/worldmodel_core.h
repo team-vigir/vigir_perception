@@ -89,11 +89,11 @@ namespace vigir_worldmodel{
 
       octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
 
-      scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 8000));
-      scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(scan_cloud_aggregator_, "/scan_cloud_filtered"));
+      scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 8000);
+      scan_cloud_updater_ = boost::make_shared<PointCloudSubscriptionAdapter<ScanPointT> >(scan_cloud_aggregator_, "/scan_cloud_filtered");
 
-      unfiltered_scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 4000));
-      unfiltered_scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(unfiltered_scan_cloud_aggregator_, "/scan_cloud"));
+      unfiltered_scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 4000);
+      unfiltered_scan_cloud_updater_ = boost::make_shared<PointCloudSubscriptionAdapter<ScanPointT> >(unfiltered_scan_cloud_aggregator_, "/scan_cloud");
 
       //stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
       //stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/multisense_sl/points2_low_rate"));
@@ -110,7 +110,7 @@ namespace vigir_worldmodel{
       double periodic_octomap_save_period = pnh_in.param("periodic_octomap_save_period", 0.0);
       octomap_->startPeriodicMapSaving(pnh_in.param("periodic_octomap_save_folder", std::string("")), ros::Duration(periodic_octomap_save_period));
 
-      communication_.reset(new WorldmodelCommunication(pnh_in, octomap_, scan_cloud_aggregator_, unfiltered_scan_cloud_aggregator_, stereo_cloud_aggregator_, tf_listener_));
+      communication_.reset(new WorldmodelCommunication(pnh_in, p_root_frame_, octomap_, scan_cloud_aggregator_, unfiltered_scan_cloud_aggregator_, stereo_cloud_aggregator_, tf_listener_));
 
 
       // State provider publishes pose data based on tf. Moved into worldmodel to prevent many dedicated tf subscriber nodes

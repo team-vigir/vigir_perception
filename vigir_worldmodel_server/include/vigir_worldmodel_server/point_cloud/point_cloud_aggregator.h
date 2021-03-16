@@ -275,7 +275,7 @@ namespace vigir_worldmodel{
           vox_grid.setInputCloud (cloud_tmp);
           vox_grid.setLeafSize (voxel_grid_size, voxel_grid_size, voxel_grid_size);
           //vox_grid.filter (*cloud); // Please see this http://www.pcl-developers.org/Possible-problem-in-new-VoxelGrid-implementation-from-PCL-1-5-0-td5490361.html
-          const boost::shared_ptr<pcl::PointCloud<PointT> > tempCloud (new pcl::PointCloud<PointT>());
+          const boost::shared_ptr<pcl::PointCloud<PointT> > tempCloud = boost::make_shared<pcl::PointCloud<PointT> >();
           vox_grid.filter (*tempCloud);
           cloud = tempCloud;
         }else{
@@ -499,8 +499,12 @@ namespace vigir_worldmodel{
 
     void writeCloudToFile(const std::string& name)
     {
-      boost::shared_ptr<pcl::PointCloud<PointT> > cloud (new pcl::PointCloud<PointT>());
-      this->getAggregateCloud(cloud, "/world");
+      if (frames_list_.size() == 0){
+        ROS_ERROR("Attempting to write pcd to file, but frames list is empty!");
+      }
+
+      boost::shared_ptr<pcl::PointCloud<PointT> > cloud = boost::make_shared<pcl::PointCloud<PointT> >();
+      this->getAggregateCloud(cloud, frames_list_[0]);
 
       pcl::io::savePCDFile(name, *cloud);
     }
