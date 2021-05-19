@@ -82,17 +82,18 @@ namespace vigir_worldmodel{
       pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
       pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
       pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
-
+      pnh_in.param("filtered_cloud_buffer_size_mb", p_filtered_cloud_buffer_size_mb, 100);
+      pnh_in.param("unfiltered_cloud_buffer_size_mb", p_unfiltered_cloud_buffer_size_mb, 50);
 
 
       //waitForTf(pnh_in);
 
       octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
 
-      scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 8000));
+      scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, p_filtered_cloud_buffer_size_mb));
       scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(scan_cloud_aggregator_, "/scan_cloud_filtered"));
 
-      unfiltered_scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, 4000));
+      unfiltered_scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, p_unfiltered_cloud_buffer_size_mb));
       unfiltered_scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(unfiltered_scan_cloud_aggregator_, "/scan_cloud"));
 
       //stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
@@ -284,6 +285,8 @@ namespace vigir_worldmodel{
     std::string p_root_frame_;
     std::string p_required_frames_list_;
     bool p_publish_frames_as_poses_;
+    int p_filtered_cloud_buffer_size_mb;
+    int p_unfiltered_cloud_buffer_size_mb;
 
     std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
