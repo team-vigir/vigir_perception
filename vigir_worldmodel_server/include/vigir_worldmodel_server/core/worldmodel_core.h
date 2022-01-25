@@ -124,15 +124,16 @@ namespace vigir_worldmodel{
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
-                                                                                            "/robot_pose",
+                                                                                            "/robot_pose_odom",
                                                                                             p_root_frame_,
-                                                                                            "/base_link"
+                                                                                            "base_link"
                                                                                             )));
+
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new StabRepublisher(
                                                                                             tf_listener_,
-                                                                                            "/base_link",
-                                                                                            "/base_stabilized")));
+                                                                                            "base_link",
+                                                                                            "base_stabilized")));
        /*
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
@@ -148,7 +149,24 @@ namespace vigir_worldmodel{
                                                                                             "/l_hand"
                                                                                           )));
                                                                                           */
-        state_provider_->start();
+        pnh_in.param("publish_frames_rate", p_publish_frames_rate_, 30.0);
+        state_provider_->start(p_publish_frames_rate_);
+      }
+
+      pnh_in.param("publish_map_pose", p_publish_map_pose_, false);
+
+      if (p_publish_map_pose_)
+      {
+          map_state_provider_.reset(new StateProvider());
+
+          map_state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
+                                                                                              tf_listener_,
+                                                                                              "/robot_pose",
+                                                                                              "map",
+                                                                                              "base_link"
+                                                                                              )));
+
+          map_state_provider_->start(10.0);
       }
 
       transform_service_provider_.reset(new TransformServiceProvider(tf_listener_));
@@ -273,6 +291,7 @@ namespace vigir_worldmodel{
     boost::shared_ptr<WorldmodelCommunication> communication_;
 
     boost::shared_ptr<StateProvider> state_provider_;
+    boost::shared_ptr<StateProvider> map_state_provider_;
 
     boost::shared_ptr<TransformServiceProvider> transform_service_provider_;
 
@@ -283,7 +302,11 @@ namespace vigir_worldmodel{
 
     std::string p_root_frame_;
     std::string p_required_frames_list_;
+
     bool p_publish_frames_as_poses_;
+    bool p_publish_map_pose_;
+    double p_publish_frames_rate_;
+    
 
     std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
