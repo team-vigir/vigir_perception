@@ -213,7 +213,7 @@ namespace vigir_worldmodel{
       if (debug_target_pose_cloud_pub_.getNumSubscribers() > 0){
           sensor_msgs::PointCloud2 cloud_ros;
           pcl::toROSMsg(*cloud, cloud_ros);
-          cloud_ros.header.frame_id = "/world";
+          cloud_ros.header.frame_id = "world";
           cloud_ros.header.stamp = ros::Time::now();
           debug_target_pose_cloud_pub_.publish(cloud_ros);
       }
@@ -239,7 +239,7 @@ namespace vigir_worldmodel{
       tf::StampedTransform robot_world_transform;
 
       try{
-          tf_listener_->lookupTransform("/pelvis", "/world", ros::Time(0), robot_world_transform);
+          tf_listener_->lookupTransform("pelvis", "world", ros::Time(0), robot_world_transform);
       }catch(tf::TransformException& ex){
           ROS_ERROR_STREAM( "Transform failed " << ex.what());
           as->setAborted();
@@ -288,7 +288,7 @@ namespace vigir_worldmodel{
         Eigen::Vector2d target_pos (closest_point_vec - (dir_normalized*0.5));
 
         geometry_msgs::PoseStamped target_pose;
-        target_pose.header.frame_id = "/world";
+        target_pose.header.frame_id = "world";
         target_pose.header.stamp = ros::Time::now();
         target_pose.pose.position.x = target_pos.x();
         target_pose.pose.position.y = target_pos.y();
@@ -315,7 +315,7 @@ namespace vigir_worldmodel{
     {
       ROS_INFO("Sending binary map data on service request");
 
-      std::string frame_name = "/pelvis";
+      std::string frame_name = "pelvis";
 
       WorldmodelOctomap octo(frame_name);
 
@@ -358,7 +358,7 @@ namespace vigir_worldmodel{
       std::string frame_name = req.region_req.header.frame_id;
 
       //If equal to root frame and want default resolution, we can just cut out a bbx. @TODO FIXME: Use parameter for frame
-      if (frame_name == "/world" && req.region_req.resolution <= 0.0){
+      if (frame_name == "world" && req.region_req.resolution <= 0.0){
         ROS_INFO("Sending region of interest binary map data on service request, cut-out of existing map");
 
         boost::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.05));
@@ -382,7 +382,7 @@ namespace vigir_worldmodel{
           resolution = req.region_req.resolution;
         }
 
-        // Construct map from scan if a different frame than "/world" is requested
+        // Construct map from scan if a different frame than "world" is requested
         WorldmodelOctomap octo(frame_name, resolution);
 
         size_t aggregator_size = scan_cloud_aggregator_->size();
@@ -594,19 +594,19 @@ namespace vigir_worldmodel{
 
       if (msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::LIDAR_FILTERED){
         pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
-        scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, "", aggregation_size);
+        scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "world", min_point, max_point, msg->environment_region_request.resolution, "", aggregation_size);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_pub_.publish(pc_ros);
       }else if(msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::LIDAR_UNFILTERED){
         pcl::PointCloud<ScanPointT>::Ptr cloud(new pcl::PointCloud<ScanPointT>());
-        unfiltered_scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, "", aggregation_size);
+        unfiltered_scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "world", min_point, max_point, msg->environment_region_request.resolution, "", aggregation_size);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_pub_.publish(pc_ros);
       }else if(msg->data_source == vigir_perception_msgs::PointCloudTypeRegionRequest::STEREO){
         pcl::PointCloud<StereoPointT>::Ptr cloud(new pcl::PointCloud<StereoPointT>());
-        stereo_head_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min_point, max_point, msg->environment_region_request.resolution, "", 1);
+        stereo_head_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "world", min_point, max_point, msg->environment_region_request.resolution, "", 1);
         sensor_msgs::PointCloud2 pc_ros;
         pcl::toROSMsg(*cloud, pc_ros);
         ocs_crop_pointcloud_stereo_pub_.publish(pc_ros);
@@ -620,7 +620,7 @@ namespace vigir_worldmodel{
       geometry_msgs::Point min_point, max_point;
       checkMinMax(msg->bounding_box_min, msg->bounding_box_max, min_point, max_point);
 
-      octomap_->getBbxFilteredOctomap(octree, "/world", min_point, max_point);
+      octomap_->getBbxFilteredOctomap(octree, "world", min_point, max_point);
       octree->toMaxLikelihood();
       octree->prune();
 
@@ -655,7 +655,7 @@ namespace vigir_worldmodel{
         ROS_INFO("Sending grid map region of interest data on ocs request");
 
         // Construct map from scan @TODO FIXME VRC Hack: Set range to 25.0 if requesting lower res
-        WorldmodelOctomap octo("/world", resolution, 25.0);
+        WorldmodelOctomap octo("world", resolution, 25.0);
 
         size_t aggregator_size = scan_cloud_aggregator_->size();
 
@@ -668,7 +668,7 @@ namespace vigir_worldmodel{
           tf::Point origin(0,0,0);
 
           for (;index >= 0; --index){
-            if (scan_cloud_aggregator_->getSingleCloudBbxFiltered(pc, "/world", min_point, max_point, &origin, index)){
+            if (scan_cloud_aggregator_->getSingleCloudBbxFiltered(pc, "world", min_point, max_point, &origin, index)){
               octo.insertCloud(origin, *pc);
             }
           }
@@ -797,7 +797,7 @@ namespace vigir_worldmodel{
         bool tf_success = false;
 
         try{
-          tf_listener_->lookupTransform("/world", "/base_link", ros::Time(0), transform);
+          tf_listener_->lookupTransform("world", "base_link", ros::Time(0), transform);
           tf_success = true;
         }catch(tf::TransformException& ex){
           ROS_ERROR_STREAM( "Transform when retrieving robot pose for local map: " << ex.what());
@@ -821,7 +821,7 @@ namespace vigir_worldmodel{
           octree.reset(new octomap::OcTree(0.05));
           //WorldmodelOctomap octo(frame_name);
 
-          octomap_->getBbxFilteredOctomap(octree, "/world", min, max);
+          octomap_->getBbxFilteredOctomap(octree, "world", min, max);
 
           octomap_msgs::Octomap octomap;
           octomap_msgs::binaryMapToMsg(*octree, octomap);
@@ -850,8 +850,8 @@ namespace vigir_worldmodel{
     tf::StampedTransform camera_transform;
 
     try{
-      tf_listener_->waitForTransform("/world", msg->header.frame_id, msg->header.stamp, ros::Duration(1.0));
-      tf_listener_->lookupTransform("/world", msg->header.frame_id, msg->header.stamp, camera_transform);
+      tf_listener_->waitForTransform("world", msg->header.frame_id, msg->header.stamp, ros::Duration(1.0));
+      tf_listener_->lookupTransform("world", msg->header.frame_id, msg->header.stamp, camera_transform);
     }catch(tf::TransformException e){
       ROS_ERROR("Transform lookup failed in dist query cloud callback: %s",e.what());
       return;
@@ -885,7 +885,7 @@ namespace vigir_worldmodel{
       max.y = hit_point.y() + dist_threshold;
       max.z = hit_point.z() + dist_threshold;
 
-      scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min, max, 0.0);
+      scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "world", min, max, 0.0);
 
       pcl::PointCloud<ScanPointT>::Ptr filtered_cloud(new pcl::PointCloud<ScanPointT>());
 
@@ -931,7 +931,7 @@ namespace vigir_worldmodel{
       max.y = hit_point.y() + dist_threshold;
       max.z = hit_point.z() + dist_threshold;
 
-      scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "/world", min, max, 0.0);
+      scan_cloud_aggregator_->getAggregateCloudBbxFiltered(cloud, "world", min, max, 0.0);
 
       pcl::PointCloud<ScanPointT>::Ptr filtered_cloud(new pcl::PointCloud<ScanPointT>());
 
@@ -1046,8 +1046,8 @@ namespace vigir_worldmodel{
       //tf::StampedTransform right_foot_transform;
 
       try{
-        tf_listener_->lookupTransform("/world", "/base_link", ros::Time(0), left_foot_transform);
-        //tf_listener_->lookupTransform("/world", "/r_foot", ros::Time(0), right_foot_transform);
+        tf_listener_->lookupTransform("world", "base_link", ros::Time(0), left_foot_transform);
+        //tf_listener_->lookupTransform("world", "r_foot", ros::Time(0), right_foot_transform);
       }catch(tf::TransformException& ex){
         ROS_ERROR_STREAM( "Transform failed when retrieving robot feet poses for local maps: " << ex.what() << " Assuming default offset 0 instead.");
         return 0.0;

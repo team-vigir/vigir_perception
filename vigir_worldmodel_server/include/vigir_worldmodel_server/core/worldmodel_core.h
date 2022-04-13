@@ -79,7 +79,7 @@ namespace vigir_worldmodel{
 
       tf_listener_.reset(new tf::TransformListener());
 
-      pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
+      pnh_in.param("root_frame", p_root_frame_, std::string("world"));
       pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
       pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
       pnh_in.param("filtered_cloud_buffer_size_mb", p_filtered_cloud_buffer_size_mb, 100);
@@ -126,27 +126,27 @@ namespace vigir_worldmodel{
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/robot_pose",
-                                                                                            "/world",
-                                                                                            "/base_link"
+                                                                                            "world",
+                                                                                            "base_link"
                                                                                             )));
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new StabRepublisher(
                                                                                             tf_listener_,
-                                                                                            "/base_link",
-                                                                                            "/base_stabilized")));
+                                                                                            "base_link",
+                                                                                            "base_stabilized")));
        /*
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/flor/r_arm_current_pose",
-                                                                                            "/world",
-                                                                                            "/r_hand"
+                                                                                            "world",
+                                                                                            "r_hand"
                                                                                             )));
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
                                                                                             "/flor/l_arm_current_pose",
-                                                                                            "/world",
-                                                                                            "/l_hand"
+                                                                                            "world",
+                                                                                            "l_hand"
                                                                                           )));
                                                                                           */
         state_provider_->start();

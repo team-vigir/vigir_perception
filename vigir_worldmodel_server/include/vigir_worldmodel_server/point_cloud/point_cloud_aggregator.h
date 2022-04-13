@@ -440,7 +440,7 @@ namespace vigir_worldmodel{
     {
 
       tf::StampedTransform world_to_camera;
-      tf_listener_->lookupTransform("/world", camera_info.header.frame_id, ros::Time(0), world_to_camera);
+      tf_listener_->lookupTransform("world", camera_info.header.frame_id, ros::Time(0), world_to_camera);
 
       Eigen::Matrix4f sensorToFrame;
       pcl_ros::transformAsMatrix(world_to_camera, sensorToFrame);
@@ -457,7 +457,7 @@ namespace vigir_worldmodel{
 
       pcl::PointCloud<typename PointT>::Ptr cloud (new pcl::PointCloud<PointT>());
 
-      this->getAggregateCloudBbxFiltered(cloud,"/world", min, max, 0.0, aggregation_size);
+      this->getAggregateCloudBbxFiltered(cloud,"world", min, max, 0.0, aggregation_size);
 
       Eigen::Affine3f test (sensorToFrame);
 
@@ -511,7 +511,7 @@ namespace vigir_worldmodel{
     void writeCloudToFile(const std::string& name)
     {
       boost::shared_ptr<pcl::PointCloud<PointT> > cloud (new pcl::PointCloud<PointT>());
-      this->getAggregateCloud(cloud, "/world");
+      this->getAggregateCloud(cloud, "world");
 
       pcl::io::savePCDFile(name, *cloud);
     }
