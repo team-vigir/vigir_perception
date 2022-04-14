@@ -14,7 +14,6 @@ find_package(Boost REQUIRED COMPONENTS thread)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   CATKIN_DEPENDS image_geometry roscpp sensor_msgs tf tf_conversions vigir_localized_image_proc
-  DEPENDS OpenCV
   INCLUDE_DIRS
   LIBRARIES ${PROJECT_NAME}
 )
@@ -31,7 +30,7 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 # Nodelet library
 add_library(${PROJECT_NAME} src/nodelets/rectify.cpp)
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}
