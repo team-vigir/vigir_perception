@@ -112,6 +112,7 @@ namespace vigir_worldmodel{
     {
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
       last_insertion_ = ros::Time(0);
+      stored_points_ = 0;
       pointclouds_.clear();
     }
 
