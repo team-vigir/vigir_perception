@@ -106,9 +106,9 @@ namespace vigir_worldmodel{
 
 
       // OCS communication
-      //ocs_crop_pointcloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/cloud_result", 1, false);
-      //ocs_crop_pointcloud_stereo_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/stereo_cloud_result", 1, false);
-      //ocs_crop_pointcloud_sub_ = m_nh.subscribe("ocs/cloud_request", 1, &WorldmodelCommunication::ocsCloudRequestCallback, this);
+      ocs_crop_pointcloud_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/cloud_result", 1, false);
+      ocs_crop_pointcloud_stereo_pub_ = m_nh.advertise<sensor_msgs::PointCloud2>("ocs/stereo_cloud_result", 1, false);
+      ocs_crop_pointcloud_sub_ = m_nh.subscribe("ocs/cloud_request", 1, &WorldmodelCommunication::ocsCloudRequestCallback, this);
 
       ocs_crop_octomap_pub_= m_nh.advertise<octomap_msgs::Octomap>("ocs/octomap_result", 1, false);
       ocs_crop_octomap_sub_ = m_nh.subscribe("ocs/octomap_request", 1, &WorldmodelCommunication::ocsOctomapRequestCallback, this);

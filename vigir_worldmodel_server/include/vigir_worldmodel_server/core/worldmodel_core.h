@@ -84,6 +84,7 @@ namespace vigir_worldmodel{
       pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
       pnh_in.param("filtered_cloud_buffer_size_mb", p_filtered_cloud_buffer_size_mb, 100);
       pnh_in.param("unfiltered_cloud_buffer_size_mb", p_unfiltered_cloud_buffer_size_mb, 50);
+      pnh_in.param("stereo_cloud_buffer_size_mb", p_stereo_cloud_buffer_size_mb, 50);
 
 
       //waitForTf(pnh_in);
@@ -96,8 +97,8 @@ namespace vigir_worldmodel{
       unfiltered_scan_cloud_aggregator_.reset(new PointCloudAggregator<ScanPointT>(tf_listener_, p_unfiltered_cloud_buffer_size_mb));
       unfiltered_scan_cloud_updater_.reset(new PointCloudSubscriptionAdapter<ScanPointT>(unfiltered_scan_cloud_aggregator_, "/scan_cloud"));
 
-      //stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
-      //stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/multisense_sl/points2_low_rate"));
+      stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, p_stereo_cloud_buffer_size_mb));
+      stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/gripper_rgbd_cam/depth/color/points_throttle"));
 
       vis_timer_ = pnh_in.createTimer(ros::Duration(2.0), &WorldmodelCore::visTimerCallback, this, false);
 
@@ -287,6 +288,7 @@ namespace vigir_worldmodel{
     bool p_publish_frames_as_poses_;
     int p_filtered_cloud_buffer_size_mb;
     int p_unfiltered_cloud_buffer_size_mb;
+    int p_stereo_cloud_buffer_size_mb;
 
     std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
