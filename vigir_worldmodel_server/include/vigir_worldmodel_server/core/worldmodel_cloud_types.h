@@ -35,6 +35,6 @@
  * Set point types used by worldmodel for scans and stereo here (stereo can be with or without color)
  */
 typedef pcl::PointXYZI ScanPointT;
-typedef pcl::PointXYZI StereoPointT;
+typedef pcl::PointXYZRGB StereoPointT;
 
 #endif
