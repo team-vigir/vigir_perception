@@ -49,6 +49,14 @@
 #include <octomap_msgs/Octomap.h>
 #include <hector_std_msgs/StringService.h>
 
+#if  __cplusplus < 201703L
+	#include <experimental/filesystem>
+	namespace fs = std::experimental::filesystem;
+#else
+	#include <filesystem>
+	namespace fs = std::filesystem;
+#endif
+
 namespace vigir_worldmodel{
 
   class WorldmodelOctomap{
@@ -60,6 +68,12 @@ namespace vigir_worldmodel{
     {
       map.setLastUpdateStamp(ros::Time(0));
       save_map_server_ = pnh_.advertiseService("save_map", &WorldmodelOctomap::saveMapCb, this);
+
+      std::stringstream start_dir_ss;
+      auto t = std::time(nullptr);
+      auto tm = *std::localtime(&t);
+      start_dir_ss <<  std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+      start_dir_ = start_dir_ss.str();
     }
 
     ~WorldmodelOctomap()
@@ -73,6 +87,17 @@ namespace vigir_worldmodel{
       if (save_folder_ != "") {
         save_map_timer_ = pnh_.createTimer(period, &WorldmodelOctomap::saveMapTimerCb, this);
       }
+
+      std::stringstream autosave_dir;
+      autosave_dir << save_folder_ << "/autosave";
+      if(!fs::exists(autosave_dir.str().c_str())) {
+        fs::create_directory(autosave_dir.str().c_str());
+      }
+      std::stringstream start_dir;
+      start_dir << save_folder_ << "/autosave/" << start_dir_;
+      if(!fs::exists(start_dir.str().c_str())) {
+        fs::create_directory(start_dir.str().c_str());
+      }
     }
 
     void reset()
@@ -85,7 +110,7 @@ namespace vigir_worldmodel{
       if (request.param != "") {
         filepath = request.param;
       } else {
-        filepath = generateTimeStampedSavePath();
+        filepath = generateTimeStampedSavePath(true);
 
       }
       writeOctomapToFile(filepath);
@@ -93,16 +118,21 @@ namespace vigir_worldmodel{
     }
 
     void saveMapTimerCb(const ros::TimerEvent& e) {
-      std::string filepath = generateTimeStampedSavePath();
+      std::string filepath = generateTimeStampedSavePath(false);
       writeOctomapToFile(filepath);
     }
 
-    std::string generateTimeStampedSavePath() const {
+    std::string generateTimeStampedSavePath(bool completed) const {
       auto t = std::time(nullptr);
       auto tm = *std::localtime(&t);
 
       std::stringstream filepath;
-      filepath << save_folder_ << "/octomap-" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".bt";
+      if (completed) {
+	      filepath << save_folder_ << "/octomap-" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".bt";
+      }
+      else {
+      	filepath <<  save_folder_ << "/autosave/" << start_dir_ <<"/octomap-" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".bt";
+      }
       return filepath.str();
     }
 
@@ -459,6 +489,8 @@ namespace vigir_worldmodel{
     bool updated_from_external_;
     std::string save_folder_;
     ros::Timer save_map_timer_;
+
+    std::string start_dir_;
   };
 
 }

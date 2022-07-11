@@ -30,6 +30,11 @@ add_executable(worldmodel_server_node src/worldmodel_server_node.cpp ${HEADER_FI
 target_link_libraries(worldmodel_server_node ${catkin_LIBRARIES})
 add_dependencies(worldmodel_server_node ${catkin_EXPORTED_TARGETS})
 
+# Support for versions less than pp17
+target_link_libraries(worldmodel_server_node stdc++fs)
+
+
+
 install(TARGETS worldmodel_server_node
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
