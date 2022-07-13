@@ -131,9 +131,18 @@ namespace vigir_worldmodel{
       start_ss <<  std::put_time(&tm, "%Y-%m-%d");
       
 
-      std::stringstream start_dir;
+      std::stringstream start_dir, autosave_dir;
       std::error_code error;
+      autosave_dir << save_folder_ << "/autosave/";
       start_dir << save_folder_ << "/autosave/" << start_ss.str();
+      
+      if(!fs::exists(autosave_dir.str().c_str())) {
+        fs::create_directory(autosave_dir.str().c_str(), error);
+        if(error) {
+          ROS_ERROR("Can't create autosave folder for octomaps");
+        }
+      }
+      
       if(!fs::exists(start_dir.str().c_str())) {
         fs::create_directory(start_dir.str().c_str(), error);
         if(error) {
