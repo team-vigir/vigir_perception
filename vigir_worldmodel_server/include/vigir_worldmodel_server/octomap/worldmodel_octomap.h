@@ -78,15 +78,21 @@ namespace vigir_worldmodel{
 
     void startPeriodicMapSaving(std::string folder, const ros::Duration& period) {
       save_folder_ = folder;
-      if (save_folder_ != "") {
+      std::error_code error;
+      if (fs::exists(save_folder_)) {
+        std::stringstream autosave_dir;
+        autosave_dir << save_folder_ << "/autosave";
+        if(!fs::exists(autosave_dir.str().c_str())) {
+          fs::create_directory(autosave_dir.str().c_str(), error);
+          if(!error) {
+            ROS_ERROR("Can't create autosave folder");
+            return;
+          }
+        }
         save_map_timer_ = pnh_.createTimer(period, &WorldmodelOctomap::saveMapTimerCb, this);
       }
 
-      std::stringstream autosave_dir;
-      autosave_dir << save_folder_ << "/autosave";
-      if(!fs::exists(autosave_dir.str().c_str())) {
-        fs::create_directory(autosave_dir.str().c_str());
-      }
+      
       
     }
 
@@ -96,6 +102,11 @@ namespace vigir_worldmodel{
     }
 
     bool saveMapCb(hector_std_msgs::StringServiceRequest& request, hector_std_msgs::StringServiceResponse& response) {
+      if(!fs::exists(save_folder_)) {
+        ROS_ERROR("The folder save folder %s does not exist!");
+        return false;
+      }
+      
       std::string filepath;
       if (request.param != "") {
         filepath = request.param;
@@ -118,11 +129,14 @@ namespace vigir_worldmodel{
 
       std::stringstream start_ss;
       start_ss <<  std::put_time(&tm, "%Y-%m-%d");
+      
 
       std::stringstream start_dir;
+      std::error_code error;
       start_dir << save_folder_ << "/autosave/" << start_ss.str();
       if(!fs::exists(start_dir.str().c_str())) {
-        fs::create_directory(start_dir.str().c_str());
+        fs::create_directory(start_dir.str().c_str(), error);
+        ROS_ERROR("Can't create save folder in autosave");
       }
 
       std::stringstream filepath;
