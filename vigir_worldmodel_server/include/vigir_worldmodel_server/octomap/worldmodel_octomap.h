@@ -84,7 +84,7 @@ namespace vigir_worldmodel{
         autosave_dir << save_folder_ << "/autosave";
         if(!fs::exists(autosave_dir.str().c_str())) {
           fs::create_directory(autosave_dir.str().c_str(), error);
-          if(!error) {
+          if(error) {
             ROS_ERROR("Can't create autosave folder");
             return;
           }
@@ -103,7 +103,7 @@ namespace vigir_worldmodel{
 
     bool saveMapCb(hector_std_msgs::StringServiceRequest& request, hector_std_msgs::StringServiceResponse& response) {
       if(!fs::exists(save_folder_)) {
-        ROS_ERROR("The folder save folder %s does not exist!");
+        ROS_ERROR("The folder save folder %s does not exist!", save_folder_);
         return false;
       }
       
@@ -136,7 +136,9 @@ namespace vigir_worldmodel{
       start_dir << save_folder_ << "/autosave/" << start_ss.str();
       if(!fs::exists(start_dir.str().c_str())) {
         fs::create_directory(start_dir.str().c_str(), error);
-        ROS_ERROR("Can't create save folder in autosave");
+        if(error) {
+          ROS_ERROR("Can't create save folder in autosave");
+        }
       }
 
       std::stringstream filepath;
