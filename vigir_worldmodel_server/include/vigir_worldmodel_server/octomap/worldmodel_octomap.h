@@ -103,7 +103,7 @@ namespace vigir_worldmodel{
 
     bool saveMapCb(hector_std_msgs::StringServiceRequest& request, hector_std_msgs::StringServiceResponse& response) {
       if(!fs::exists(save_folder_)) {
-        ROS_ERROR("The folder save folder %s does not exist!", save_folder_);
+        ROS_ERROR_STREAM("The folder save folder " << save_folder_ <<  " does not exist!");
         return false;
       }
       
