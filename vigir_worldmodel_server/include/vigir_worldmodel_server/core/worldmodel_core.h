@@ -56,268 +56,268 @@
 
 #include <vigir_worldmodel_server/core/worldmodel_cloud_types.h>
 
-namespace vigir_worldmodel{
-
+namespace vigir_worldmodel
+{
+/**
+ * Main world modelling class. Subscribes to point cloud data and makes environment data available through ROS
+ * interface.
+ */
+class WorldmodelCore
+{
+public:
   /**
-   * Main world modelling class. Subscribes to point cloud data and makes environment data available through ROS interface.
-   */
-  class WorldmodelCore{
-  public:
-
-    /**
    * Constructor, node handles as argument make it easy to use this either in a node or nodelet.
    */
-    WorldmodelCore(ros::NodeHandle& nh_in, ros::NodeHandle& pnh_in)
+  WorldmodelCore(ros::NodeHandle& nh_in, ros::NodeHandle& pnh_in)
     : nh_(nh_in)
     , pnh_(pnh_in)
     , octo_marker_vis_(pnh_in)
     , point_cloud_vis_(pnh_in)
     , unfiltered_point_cloud_vis_(pnh_in, "unfiltered_cloud_vis")
+  {
+    // Ignore PCL warning spam
+    pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
+
+    tf_listener_.reset(new tf::TransformListener());
+
+    pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
+    pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
+    pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
+
+    // waitForTf(pnh_in);
+
+    octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
+
+    scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 8000);
+    scan_cloud_updater_ =
+        boost::make_shared<PointCloudSubscriptionAdapter<ScanPointT> >(scan_cloud_aggregator_, "/scan_cloud_filtered");
+
+    unfiltered_scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 4000);
+    unfiltered_scan_cloud_updater_ =
+        boost::make_shared<PointCloudSubscriptionAdapter<ScanPointT> >(unfiltered_scan_cloud_aggregator_, "/scan_"
+                                                                                                          "cloud");
+
+    // stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
+    // stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_,
+    // "/multisense_sl/points2_low_rate"));
+
+    vis_timer_ = pnh_in.createTimer(ros::Duration(2.0), &WorldmodelCore::visTimerCallback, this, false);
+
+    if (!p_use_external_octomap_)
     {
-      // Ignore PCL warning spam
-      pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
-
-      tf_listener_.reset(new tf::TransformListener());
-
-      pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
-      pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
-      pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
-
-
-
-      //waitForTf(pnh_in);
-
-      octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
-
-      scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 8000);
-      scan_cloud_updater_ = boost::make_shared<PointCloudSubscriptionAdapter<ScanPointT> >(scan_cloud_aggregator_, "/scan_cloud_filtered");
-
-      unfiltered_scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 4000);
-      unfiltered_scan_cloud_updater_ = boost::make_shared<PointCloudSubscriptionAdapter<ScanPointT> >(unfiltered_scan_cloud_aggregator_, "/scan_cloud");
-
-      //stereo_cloud_aggregator_.reset(new PointCloudAggregator<StereoPointT>(tf_listener_, 10));
-      //stereo_cloud_updater_.reset(new PointCloudSubscriptionAdapter<StereoPointT>(stereo_cloud_aggregator_, "/multisense_sl/points2_low_rate"));
-
-      vis_timer_ = pnh_in.createTimer(ros::Duration(2.0), &WorldmodelCore::visTimerCallback, this, false);
-
-      if (!p_use_external_octomap_){
-        octo_update_timer_ = pnh_in.createTimer(ros::Duration(0.1), &WorldmodelCore::octoUpdateTimerCallback, this, false);
-      }else{
-        octomap_->setUpdatedFromExternal(true);
-        octo_external_update_sub_ = pnh_in.subscribe("octomap_external_update", 1, &WorldmodelCore::octomapExternalUpdateCallback, this);
-      }
-
-      double periodic_octomap_save_period = pnh_in.param("periodic_octomap_save_period", 0.0);
-      octomap_->startPeriodicMapSaving(pnh_in.param("periodic_octomap_save_folder", std::string("")), ros::Duration(periodic_octomap_save_period));
-
-      communication_.reset(new WorldmodelCommunication(pnh_in, p_root_frame_, octomap_, scan_cloud_aggregator_, unfiltered_scan_cloud_aggregator_, stereo_cloud_aggregator_, tf_listener_));
-
-
-      // State provider publishes pose data based on tf. Moved into worldmodel to prevent many dedicated tf subscriber nodes
-      // consuming both CPU and bandwidth. Runs it´s own thread
-
-      pnh_in.param("publish_frames_as_poses", p_publish_frames_as_poses_, true);
-
-      if (p_publish_frames_as_poses_)
-      {
-        state_provider_.reset(new StateProvider());
-
-        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
-                                                                                            tf_listener_,
-                                                                                            "/robot_pose_odom",
-                                                                                            p_root_frame_,
-                                                                                            "base_link"
-                                                                                            )));
-
-
-        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new StabRepublisher(
-                                                                                            tf_listener_,
-                                                                                            "base_link",
-                                                                                            "base_stabilized")));
-       /*
-        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
-                                                                                            tf_listener_,
-                                                                                            "/flor/r_arm_current_pose",
-                                                                                            p_root_frame_,
-                                                                                            "/r_hand"
-                                                                                            )));
-
-        state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
-                                                                                            tf_listener_,
-                                                                                            "/flor/l_arm_current_pose",
-                                                                                            p_root_frame_,
-                                                                                            "/l_hand"
-                                                                                          )));
-                                                                                          */
-        pnh_in.param("publish_frames_rate", p_publish_frames_rate_, 30.0);
-        state_provider_->start(p_publish_frames_rate_);
-      }
-
-      pnh_in.param("publish_map_pose", p_publish_map_pose_, false);
-
-      if (p_publish_map_pose_)
-      {
-          map_state_provider_.reset(new StateProvider());
-
-          map_state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
-                                                                                              tf_listener_,
-                                                                                              "/robot_pose",
-                                                                                              "map",
-                                                                                              "base_link"
-                                                                                              )));
-
-          map_state_provider_->start(10.0);
-      }
-
-      transform_service_provider_.reset(new TransformServiceProvider(tf_listener_));
-
+      octo_update_timer_ =
+          pnh_in.createTimer(ros::Duration(0.1), &WorldmodelCore::octoUpdateTimerCallback, this, false);
+    }
+    else
+    {
+      octomap_->setUpdatedFromExternal(true);
+      octo_external_update_sub_ =
+          pnh_in.subscribe("octomap_external_update", 1, &WorldmodelCore::octomapExternalUpdateCallback, this);
     }
 
-    ~WorldmodelCore()
-    {}
+    double periodic_octomap_save_period = pnh_in.param("periodic_octomap_save_period", 0.0);
+    octomap_->startPeriodicMapSaving(pnh_in.param("periodic_octomap_save_folder", std::string("")),
+                                     ros::Duration(periodic_octomap_save_period));
 
+    communication_.reset(new WorldmodelCommunication(pnh_in, p_root_frame_, octomap_, scan_cloud_aggregator_,
+                                                     unfiltered_scan_cloud_aggregator_, stereo_cloud_aggregator_,
+                                                     tf_listener_));
 
-    /**
+    // State provider publishes pose data based on tf. Moved into worldmodel to prevent many dedicated tf subscriber
+    // nodes consuming both CPU and bandwidth. Runs it´s own thread
+
+    pnh_in.param("publish_frames_as_poses", p_publish_frames_as_poses_, true);
+
+    if (p_publish_frames_as_poses_)
+    {
+      state_provider_.reset(new StateProvider());
+
+      state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(
+          new TfPoseRepublisher(tf_listener_, "/robot_pose_odom", p_root_frame_, "base_link")));
+
+      state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(
+          new StabRepublisher(tf_listener_, "base_link", "base_stabilized")));
+      /*
+       state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
+                                                                                           tf_listener_,
+                                                                                           "/flor/r_arm_current_pose",
+                                                                                           p_root_frame_,
+                                                                                           "/r_hand"
+                                                                                           )));
+
+       state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
+                                                                                           tf_listener_,
+                                                                                           "/flor/l_arm_current_pose",
+                                                                                           p_root_frame_,
+                                                                                           "/l_hand"
+                                                                                         )));
+                                                                                         */
+      pnh_in.param("publish_frames_rate", p_publish_frames_rate_, 30.0);
+      state_provider_->start(p_publish_frames_rate_);
+    }
+
+    pnh_in.param("publish_map_pose", p_publish_map_pose_, false);
+
+    if (p_publish_map_pose_)
+    {
+      map_state_provider_.reset(new StateProvider());
+
+      map_state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(
+          new TfPoseRepublisher(tf_listener_, "/robot_pose", "map", "base_link")));
+
+      map_state_provider_->start(10.0);
+    }
+
+    transform_service_provider_.reset(new TransformServiceProvider(tf_listener_));
+  }
+
+  ~WorldmodelCore()
+  {
+  }
+
+  /**
    * This callback optionally publishes visualizations based on a timer
    * Will only consume significant cycles if number of subscribers is larger 0.
    */
-    void visTimerCallback(const ros::TimerEvent& event)
+  void visTimerCallback(const ros::TimerEvent& event)
+  {
+    if (octo_marker_vis_.hasSubscribers())
     {
-
-      if (octo_marker_vis_.hasSubscribers()){
-        octo_marker_vis_.publishVis(octomap_->getCurrentMap());
-      }
-
-      if (point_cloud_vis_.hasSubscribers()){
-
-        ros::WallTime start = ros::WallTime::now();
-
-        pcl::PointCloud<ScanPointT>::Ptr cloud;
-        cloud.reset (new pcl::PointCloud<ScanPointT>());
-        if (scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_, p_root_frame_, 2000)){
-          point_cloud_vis_.publishVis(*cloud);
-        }
-
-        ROS_DEBUG("Generating and publishing filtered cloud took %f seconds.", (ros::WallTime::now()-start).toSec());
-      }
-
-      if (unfiltered_point_cloud_vis_.hasSubscribers()){
-
-        ros::WallTime start = ros::WallTime::now();
-
-        pcl::PointCloud<ScanPointT>::Ptr cloud;
-        cloud.reset (new pcl::PointCloud<ScanPointT>());
-        if (unfiltered_scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_, "",2000)){
-          unfiltered_point_cloud_vis_.publishVis(*cloud);
-        }
-
-        ROS_DEBUG("Generating and publishing unfiltered cloud took %f seconds.", (ros::WallTime::now()-start).toSec());
-      }
-
+      octo_marker_vis_.publishVis(octomap_->getCurrentMap());
     }
 
-    void octoUpdateTimerCallback(const ros::TimerEvent& event)
-    {
-      //Timing octo_timer;
-
-      pcl::PointCloud<ScanPointT> pc;
-      tf::Point origin(0,0,0);
-
-      while (scan_cloud_aggregator_->getCloudUpperBound(pc, p_root_frame_, octomap_->getCurrentMap().getLastUpdateStamp(), &origin)){
-        octomap_->insertCloud(origin, pc);
-      }
-
-    }
-
-    void octomapExternalUpdateCallback(const octomap_msgs::OctomapConstPtr& msg)
-    {
-      //if (!octomap_->updateOctomap(*msg))
-      //  ROS_WARN("External octomap update failed!");
-
-      octomap_->updateOctomap(*msg);
-    }
-
-
-    void waitForTf(ros::NodeHandle& pnh)
+    if (point_cloud_vis_.hasSubscribers())
     {
       ros::WallTime start = ros::WallTime::now();
-      ROS_INFO("Waiting for tf to become available");
 
-      pnh.param("required_frames", p_required_frames_list_, std::string(""));
-
-      if (p_required_frames_list_.empty()){
-        ROS_WARN("No list of tf frames to wait for specified! Could lead to transform errors during startup.");
-        return;
+      pcl::PointCloud<ScanPointT>::Ptr cloud;
+      cloud.reset(new pcl::PointCloud<ScanPointT>());
+      if (scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_, p_root_frame_, 2000))
+      {
+        point_cloud_vis_.publishVis(*cloud);
       }
 
-      boost::algorithm::split(required_frames_list_, p_required_frames_list_, boost::is_any_of("\t "));
-
-
-      bool transforms_successful = false;
-
-      while (!transforms_successful){
-
-        bool success = true;
-
-        for (size_t i = 0; i < required_frames_list_.size(); ++i){
-          success = success && tf_listener_->waitForTransform(p_root_frame_, required_frames_list_[i], ros::Time(0), ros::Duration(10.0));
-          if(!success)
-            ROS_WARN("Worldmodel server waiting for (%s) tf...", required_frames_list_[i].c_str());
-        }
-
-        transforms_successful = success;
-      }
-      ros::WallTime end = ros::WallTime::now();
-      ROS_INFO("Finished waiting for tf, waited %f seconds", (end-start).toSec());
+      ROS_DEBUG("Generating and publishing filtered cloud took %f seconds.", (ros::WallTime::now() - start).toSec());
     }
 
-  protected:
-    ros::NodeHandle& nh_;
-    ros::NodeHandle& pnh_;
+    if (unfiltered_point_cloud_vis_.hasSubscribers())
+    {
+      ros::WallTime start = ros::WallTime::now();
 
-    boost::shared_ptr<tf::TransformListener> tf_listener_;
+      pcl::PointCloud<ScanPointT>::Ptr cloud;
+      cloud.reset(new pcl::PointCloud<ScanPointT>());
+      if (unfiltered_scan_cloud_aggregator_->getAggregateCloud(cloud, p_root_frame_, "", 2000))
+      {
+        unfiltered_point_cloud_vis_.publishVis(*cloud);
+      }
 
-    boost::shared_ptr<WorldmodelOctomap> octomap_;
+      ROS_DEBUG("Generating and publishing unfiltered cloud took %f seconds.", (ros::WallTime::now() - start).toSec());
+    }
+  }
 
-    boost::shared_ptr<PointCloudAggregator<ScanPointT> > scan_cloud_aggregator_;
-    boost::shared_ptr<PointCloudSubscriptionAdapter<ScanPointT> > scan_cloud_updater_;
+  void octoUpdateTimerCallback(const ros::TimerEvent& event)
+  {
+    // Timing octo_timer;
 
-    boost::shared_ptr<PointCloudAggregator<ScanPointT> > unfiltered_scan_cloud_aggregator_;
-    boost::shared_ptr<PointCloudSubscriptionAdapter<ScanPointT> > unfiltered_scan_cloud_updater_;
+    pcl::PointCloud<ScanPointT> pc;
+    tf::Point origin(0, 0, 0);
 
-    boost::shared_ptr<PointCloudAggregator<StereoPointT> > stereo_cloud_aggregator_;
-    boost::shared_ptr<PointCloudSubscriptionAdapter<StereoPointT> > stereo_cloud_updater_;
+    while (scan_cloud_aggregator_->getCloudUpperBound(pc, p_root_frame_, octomap_->getCurrentMap().getLastUpdateStamp(),
+                                                      &origin))
+    {
+      octomap_->insertCloud(origin, pc);
+    }
+  }
 
-    boost::shared_ptr<WorldmodelCommunication> communication_;
+  void octomapExternalUpdateCallback(const octomap_msgs::OctomapConstPtr& msg)
+  {
+    // if (!octomap_->updateOctomap(*msg))
+    //  ROS_WARN("External octomap update failed!");
 
-    boost::shared_ptr<StateProvider> state_provider_;
-    boost::shared_ptr<StateProvider> map_state_provider_;
+    octomap_->updateOctomap(*msg);
+  }
 
-    boost::shared_ptr<TransformServiceProvider> transform_service_provider_;
+  void waitForTf(ros::NodeHandle& pnh)
+  {
+    ros::WallTime start = ros::WallTime::now();
+    ROS_INFO("Waiting for tf to become available");
 
-    //Visualizers (for debugging during development)
-    OctomapVisualization octo_marker_vis_;
-    PointCloudVisualization point_cloud_vis_;
-    PointCloudVisualization unfiltered_point_cloud_vis_;
+    pnh.param("required_frames", p_required_frames_list_, std::string(""));
 
-    std::string p_root_frame_;
-    std::string p_required_frames_list_;
+    if (p_required_frames_list_.empty())
+    {
+      ROS_WARN("No list of tf frames to wait for specified! Could lead to transform errors during startup.");
+      return;
+    }
 
-    bool p_publish_frames_as_poses_;
-    bool p_publish_map_pose_;
-    double p_publish_frames_rate_;
-    
+    boost::algorithm::split(required_frames_list_, p_required_frames_list_, boost::is_any_of("\t "));
 
-    std::vector<std::string> required_frames_list_;
-    bool p_use_external_octomap_;
-    double p_octomap_max_range_;
+    bool transforms_successful = false;
 
-    ros::Timer vis_timer_;
-    ros::Timer octo_update_timer_;
+    while (!transforms_successful)
+    {
+      bool success = true;
 
-    ros::Subscriber octo_external_update_sub_;
-  };
+      for (size_t i = 0; i < required_frames_list_.size(); ++i)
+      {
+        success = success && tf_listener_->waitForTransform(p_root_frame_, required_frames_list_[i], ros::Time(0),
+                                                            ros::Duration(10.0));
+        if (!success)
+          ROS_WARN("Worldmodel server waiting for (%s) tf...", required_frames_list_[i].c_str());
+      }
 
-}
+      transforms_successful = success;
+    }
+    ros::WallTime end = ros::WallTime::now();
+    ROS_INFO("Finished waiting for tf, waited %f seconds", (end - start).toSec());
+  }
+
+protected:
+  ros::NodeHandle& nh_;
+  ros::NodeHandle& pnh_;
+
+  boost::shared_ptr<tf::TransformListener> tf_listener_;
+
+  boost::shared_ptr<WorldmodelOctomap> octomap_;
+
+  boost::shared_ptr<PointCloudAggregator<ScanPointT> > scan_cloud_aggregator_;
+  boost::shared_ptr<PointCloudSubscriptionAdapter<ScanPointT> > scan_cloud_updater_;
+
+  boost::shared_ptr<PointCloudAggregator<ScanPointT> > unfiltered_scan_cloud_aggregator_;
+  boost::shared_ptr<PointCloudSubscriptionAdapter<ScanPointT> > unfiltered_scan_cloud_updater_;
+
+  boost::shared_ptr<PointCloudAggregator<StereoPointT> > stereo_cloud_aggregator_;
+  boost::shared_ptr<PointCloudSubscriptionAdapter<StereoPointT> > stereo_cloud_updater_;
+
+  boost::shared_ptr<WorldmodelCommunication> communication_;
+
+  boost::shared_ptr<StateProvider> state_provider_;
+  boost::shared_ptr<StateProvider> map_state_provider_;
+
+  boost::shared_ptr<TransformServiceProvider> transform_service_provider_;
+
+  // Visualizers (for debugging during development)
+  OctomapVisualization octo_marker_vis_;
+  PointCloudVisualization point_cloud_vis_;
+  PointCloudVisualization unfiltered_point_cloud_vis_;
+
+  std::string p_root_frame_;
+  std::string p_required_frames_list_;
+
+  bool p_publish_frames_as_poses_;
+  bool p_publish_map_pose_;
+  double p_publish_frames_rate_;
+
+  std::vector<std::string> required_frames_list_;
+  bool p_use_external_octomap_;
+  double p_octomap_max_range_;
+
+  ros::Timer vis_timer_;
+  ros::Timer octo_update_timer_;
+
+  ros::Subscriber octo_external_update_sub_;
+};
+
+}  // namespace vigir_worldmodel
 
 #endif

@@ -31,108 +31,133 @@
 
 #include <octomap/octomap.h>
 
-namespace vigir_worldmodel{
-
-  /**
+namespace vigir_worldmodel
+{
+/**
  * Contains a octomap plus relevant properties (like bounding box, resolution, hit/miss probabilities etc)
  */
-  class OctomapContainer
+class OctomapContainer
+{
+public:
+  OctomapContainer(const std::string& frame_id, double res = 0.05, double max_range = 10.0) : m_frame_id(frame_id)
   {
-  public:
-    OctomapContainer(const std::string& frame_id, double res = 0.05, double max_range = 10.0)
-        : m_frame_id(frame_id)
-    {     
-      m_res = res;
-      /*
-      m_probHit = 0.7;
-      m_probMiss = 0.4;
-      m_thresMin = 0.12;
-      m_thresMax = 0.97;
-      */
-      m_maxRange = max_range;
-      m_maxRange = max_range * max_range;
+    m_res = res;
+    /*
+    m_probHit = 0.7;
+    m_probMiss = 0.4;
+    m_thresMin = 0.12;
+    m_thresMax = 0.97;
+    */
+    m_maxRange = max_range;
+    m_maxRange = max_range * max_range;
 
-      m_octree.reset(new octomap::OcTree( m_res));
+    m_octree.reset(new octomap::OcTree(m_res));
 
-      m_treeDepth =  m_octree->getTreeDepth();
-
-      /*
-      double minX, minY, minZ;
-      double maxX, maxY, maxZ;
-      m_octree->getMetricMin(minX, minY, minZ);
-      m_octree->getMetricMax(maxX, maxY, maxZ);
-
-      m_updateBBXMin[0] =  m_octree->coordToKey(minX);
-      m_updateBBXMin[1] =  m_octree->coordToKey(minY);
-      m_updateBBXMin[2] =  m_octree->coordToKey(minZ);
-
-      m_updateBBXMax[0] =  m_octree->coordToKey(maxX);
-      m_updateBBXMax[1] =  m_octree->coordToKey(maxY);
-      m_updateBBXMax[2] =  m_octree->coordToKey(maxZ);
-      */
-    }
-
-    void reset()
-    {
-      m_octree->clear();
-      last_update_timestamp = ros::Time::now();
-    }
-
-    void update(octomap::AbstractOcTree* incoming_octomap)
-    {
-      m_octree.reset(static_cast<octomap::OcTree*>(incoming_octomap));
-    }
+    m_treeDepth = m_octree->getTreeDepth();
 
     /*
-    inline void updateMinKey(const octomap::OcTreeKey& in){
-      for (unsigned i=0; i<3; ++i)
-        m_updateBBXMin[i] = std::min(in[i], m_updateBBXMin[i]);
-    };
+    double minX, minY, minZ;
+    double maxX, maxY, maxZ;
+    m_octree->getMetricMin(minX, minY, minZ);
+    m_octree->getMetricMax(maxX, maxY, maxZ);
 
-    inline void updateMaxKey(const octomap::OcTreeKey& in){
-      for (unsigned i=0; i<3; ++i)
-        m_updateBBXMax[i] = std::max(in[i], m_updateBBXMax[i]);
-    };
+    m_updateBBXMin[0] =  m_octree->coordToKey(minX);
+    m_updateBBXMin[1] =  m_octree->coordToKey(minY);
+    m_updateBBXMin[2] =  m_octree->coordToKey(minZ);
+
+    m_updateBBXMax[0] =  m_octree->coordToKey(maxX);
+    m_updateBBXMax[1] =  m_octree->coordToKey(maxY);
+    m_updateBBXMax[2] =  m_octree->coordToKey(maxZ);
     */
+  }
 
-    octomap::OcTree* getOcTree() { return m_octree.get(); };
-    const octomap::OcTree* getOcTree() const { return m_octree.get(); };
+  void reset()
+  {
+    m_octree->clear();
+    last_update_timestamp = ros::Time::now();
+  }
 
-    double getMaxRange() const { return m_maxRange; };
-    double getMaxRangeSq() const { return m_maxRange_sq; };
-    unsigned getMaxTreeDepth() const { return m_treeDepth; };
+  void update(octomap::AbstractOcTree* incoming_octomap)
+  {
+    m_octree.reset(static_cast<octomap::OcTree*>(incoming_octomap));
+  }
 
-    const std::string getFrameId() const { return m_frame_id; };
-
-    const ros::Time& getLastUpdateStamp() const { return last_update_timestamp; };
-    void setLastUpdateStamp(const ros::Time& stamp)  { last_update_timestamp = stamp; };
-
-    //octomap::OcTreeKey m_updateBBXMin;
-    //octomap::OcTreeKey m_updateBBXMax;
-
-  protected:
-    boost::shared_ptr<octomap::OcTree> m_octree;
-
-      //boost::shared_ptr<octomap::OcTree> om(static_cast<octomap::OcTree*>(octomap_msgs::msgToMap(map)));
-
-
-    double m_res;
-    /*
-    double m_probHit;
-    double m_probMiss;
-    double m_thresMin;
-    double m_thresMax;
-    */
-    unsigned  m_treeDepth;
-
-
-    double m_maxRange;
-    double m_maxRange_sq;
-
-    ros::Time last_update_timestamp;
-    std::string m_frame_id;
+  /*
+  inline void updateMinKey(const octomap::OcTreeKey& in){
+    for (unsigned i=0; i<3; ++i)
+      m_updateBBXMin[i] = std::min(in[i], m_updateBBXMin[i]);
   };
 
-}
+  inline void updateMaxKey(const octomap::OcTreeKey& in){
+    for (unsigned i=0; i<3; ++i)
+      m_updateBBXMax[i] = std::max(in[i], m_updateBBXMax[i]);
+  };
+  */
+
+  octomap::OcTree* getOcTree()
+  {
+    return m_octree.get();
+  };
+
+  const octomap::OcTree* getOcTree() const
+  {
+    return m_octree.get();
+  };
+
+  double getMaxRange() const
+  {
+    return m_maxRange;
+  };
+
+  double getMaxRangeSq() const
+  {
+    return m_maxRange_sq;
+  };
+
+  unsigned getMaxTreeDepth() const
+  {
+    return m_treeDepth;
+  };
+
+  const std::string getFrameId() const
+  {
+    return m_frame_id;
+  };
+
+  const ros::Time& getLastUpdateStamp() const
+  {
+    return last_update_timestamp;
+  };
+
+  void setLastUpdateStamp(const ros::Time& stamp)
+  {
+    last_update_timestamp = stamp;
+  };
+
+  // octomap::OcTreeKey m_updateBBXMin;
+  // octomap::OcTreeKey m_updateBBXMax;
+
+protected:
+  boost::shared_ptr<octomap::OcTree> m_octree;
+
+  // boost::shared_ptr<octomap::OcTree> om(static_cast<octomap::OcTree*>(octomap_msgs::msgToMap(map)));
+
+  double m_res;
+  /*
+  double m_probHit;
+  double m_probMiss;
+  double m_thresMin;
+  double m_thresMax;
+  */
+  unsigned m_treeDepth;
+
+  double m_maxRange;
+  double m_maxRange_sq;
+
+  ros::Time last_update_timestamp;
+  std::string m_frame_id;
+};
+
+}  // namespace vigir_worldmodel
 
 #endif
