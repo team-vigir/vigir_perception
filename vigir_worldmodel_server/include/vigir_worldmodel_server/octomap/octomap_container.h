@@ -50,6 +50,7 @@ namespace vigir_worldmodel{
       m_thresMax = 0.97;
       */
       m_maxRange = max_range;
+      m_maxRange = max_range * max_range;
 
       m_octree.reset(new octomap::OcTree( m_res));
 
@@ -98,6 +99,7 @@ namespace vigir_worldmodel{
     const octomap::OcTree* getOcTree() const { return m_octree.get(); };
 
     double getMaxRange() const { return m_maxRange; };
+    double getMaxRangeSq() const { return m_maxRange_sq; };
     unsigned getMaxTreeDepth() const { return m_treeDepth; };
 
     const std::string getFrameId() const { return m_frame_id; };
@@ -125,6 +127,7 @@ namespace vigir_worldmodel{
 
 
     double m_maxRange;
+    double m_maxRange_sq;
 
     ros::Time last_update_timestamp;
     std::string m_frame_id;

@@ -172,9 +172,7 @@ namespace vigir_worldmodel{
         octomap::point3d point(it->x, it->y, it->z);
         // maxrange check
 
-        double maxRange = map.getMaxRange();
-
-        if (((point - sensorOrigin).norm() <= maxRange) ) {
+        if (((point - sensorOrigin).norm_sq() <= map.getMaxRangeSq()) ) {
 
           // free cells
           if (m_octree->computeRayKeys(sensorOrigin, point, m_keyRay)){
