@@ -39,17 +39,19 @@ namespace vigir_worldmodel
 class OctomapContainer
 {
 public:
-  OctomapContainer(const std::string& frame_id, double res = 0.05, double max_range = 10.0) : m_frame_id(frame_id)
+  OctomapContainer(const std::string& frame_id, double res = 0.05, double max_range = 10.0, bool local_mapping = false)
+    : m_res(res)
+    , m_maxRange(max_range)
+    , m_maxRange_sq(max_range * max_range)
+    , m_local_mapping(local_mapping)
+    , m_frame_id(frame_id)
   {
-    m_res = res;
     /*
     m_probHit = 0.7;
     m_probMiss = 0.4;
     m_thresMin = 0.12;
     m_thresMax = 0.97;
     */
-    m_maxRange = max_range;
-    m_maxRange = max_range * max_range;
 
     m_octree.reset(new octomap::OcTree(m_res));
 
@@ -119,6 +121,11 @@ public:
     return m_treeDepth;
   };
 
+  bool isLocalMapping() const
+  {
+    return m_local_mapping;
+  };
+
   const std::string getFrameId() const
   {
     return m_frame_id;
@@ -153,6 +160,8 @@ protected:
 
   double m_maxRange;
   double m_maxRange_sq;
+
+  bool m_local_mapping;
 
   ros::Time last_update_timestamp;
   std::string m_frame_id;

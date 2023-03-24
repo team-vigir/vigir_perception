@@ -78,15 +78,18 @@ public:
     // Ignore PCL warning spam
     pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 
-    tf_listener_.reset(new tf::TransformListener());
+    tf_listener_ = boost::make_shared<tf::TransformListener>();
 
-    pnh_in.param("root_frame", p_root_frame_, std::string("/world"));
-    pnh_in.param("use_external_octomap", p_use_external_octomap_, false);
-    pnh_in.param("octomap_max_range", p_octomap_max_range_, 5.0);
+    bool local_mapping;
 
-    // waitForTf(pnh_in);
+    pnh_.param("root_frame", p_root_frame_, std::string("/world"));
+    pnh_.param("use_external_octomap", p_use_external_octomap_, false);
+    pnh_.param("octomap_max_range", p_octomap_max_range_, 5.0);
+    pnh_.param("local_mapping", local_mapping, false);
 
-    octomap_.reset(new WorldmodelOctomap(p_root_frame_, 0.05, p_octomap_max_range_));
+    // waitForTf(pnh_);
+
+    octomap_ = boost::make_shared<WorldmodelOctomap>(p_root_frame_, 0.05, p_octomap_max_range_, local_mapping);
 
     scan_cloud_aggregator_ = boost::make_shared<PointCloudAggregator<ScanPointT> >(tf_listener_, 8000);
     scan_cloud_updater_ =

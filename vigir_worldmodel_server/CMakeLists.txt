@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vigir_worldmodel_server)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED octomap_msgs octomap_ros pcl_ros vigir_perception_msgs hector_nav_msgs hector_std_msgs)
 link_libraries(${OCTOMAP_LIBRARIES})

@@ -56,8 +56,8 @@ class WorldmodelOctomap
 public:
   // typedef octomap_msgs::BoundingBoxQuery BBXSrv;
 
-  WorldmodelOctomap(const std::string& frame_id, double res = 0.05, double max_range = 10.0)
-    : map(frame_id, res, max_range), updated_from_external_(false), pnh_("~")
+  WorldmodelOctomap(const std::string& frame_id, double res = 0.05, double max_range = 10.0, bool local_mapping = false)
+    : map(frame_id, res, max_range, local_mapping), updated_from_external_(false), pnh_("~")
   {
     map.setLastUpdateStamp(ros::Time(0));
     save_map_server_ = pnh_.advertiseService("save_map", &WorldmodelOctomap::saveMapCb, this);
@@ -192,7 +192,7 @@ public:
       octomap::point3d point(it->x, it->y, it->z);
       // maxrange check
 
-      if (((point - sensorOrigin).norm_sq() <= map.getMaxRangeSq()))
+      if ((point - sensorOrigin).norm_sq() <= map.getMaxRangeSq())
       {
         // free cells
         if (m_octree->computeRayKeys(sensorOrigin, point, m_keyRay))
@@ -232,6 +232,7 @@ public:
     }
     */
     }
+
     // mark free cells only if not seen occupied in this cloud
     for (octomap::KeySet::iterator it = free_cells.begin(), end = free_cells.end(); it != end; ++it)
     {
@@ -245,6 +246,34 @@ public:
     for (octomap::KeySet::iterator it = occupied_cells.begin(), end = free_cells.end(); it != end; it++)
     {
       m_octree->updateNode(*it, true);
+    }
+
+    if (map.isLocalMapping())
+      clearNodesOutOfRange(sensorOriginTf);
+  }
+
+  void clearNodesOutOfRange(const tf::Point& sensorOriginTf)
+  {
+    octomap::OcTree* m_octree = map.getOcTree();
+
+    octomap::point3d sensorOrigin = octomap::pointTfToOctomap(sensorOriginTf);
+
+    octomap::OcTreeKey test_key;
+    if (!m_octree->coordToKeyChecked(sensorOrigin, test_key))
+    {
+      ROS_ERROR_STREAM("Could not generate Key for origin " << sensorOrigin);
+      return;
+    }
+
+    // iterate through all leafes and delete those that are too far away
+    for (octomap::OcTree::leaf_iterator it = m_octree->begin_leafs(); it != m_octree->end_leafs(); it++)
+    {
+      octomap::point3d point = it.getCoordinate();
+
+      if ((point - sensorOrigin).norm_sq() > map.getMaxRangeSq())
+      {
+        m_octree->deleteNode(it.getKey());
+      }
     }
   }
 
