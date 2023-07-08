@@ -315,8 +315,10 @@ namespace vigir_worldmodel{
                              double max_height,
                              unsigned int tree_depth = 16,
                              Eigen::Vector2d* min_trans = 0,
-                             Eigen::Vector2d* max_trans = 0)
+                             Eigen::Vector2d* max_trans = 0,
+                             double log_odds_threshold=std::numeric_limits<double>::quiet_NaN())
     {
+        if(std::isnan(log_odds_threshold))log_odds_threshold = m_octree->getOccupancyThres();
       if (m_octree->size() < 100){
         ROS_WARN("Octree has only %d nodes, not generating occupancy grid map for it.", static_cast<int>(m_octree->size()));
         return false;
@@ -425,8 +427,8 @@ namespace vigir_worldmodel{
 
         if ((z_val > min_height) && (z_val < max_height)){
 
-          bool occupied = m_octree->isNodeOccupied(*it);
-
+          float val = it->getLogOdds();
+          bool occupied = val > log_odds_threshold;
           if (it.getDepth() == m_octree->getTreeDepth()){
             unsigned idx = mapIdx(it.getKey());
             if (occupied)
@@ -475,10 +477,9 @@ namespace vigir_worldmodel{
       return m_octree->castRay(origin, direction, end_point,true, 600.0);
     }
 
-    bool getOccupancyGridmap(nav_msgs::OccupancyGrid& grid_map, double min_height, double max_height)
+    bool getOccupancyGridmap(nav_msgs::OccupancyGrid& grid_map, double min_height, double max_height, double log_odds_threshold)
     {
-      return this->getOccupancyGridmap(map.getOcTree(), grid_map, min_height, max_height);
-
+      return this->getOccupancyGridmap(map.getOcTree(), grid_map, min_height, max_height,16,0,0, log_odds_threshold);
     }
 
     inline unsigned mapIdx(int i, int j) const{

@@ -68,6 +68,8 @@
 #include <pcl/segmentation/extract_clusters.h>
 
 #include <hector_nav_msgs/GetDistanceToObstacle.h>
+#include <vigir_worldmodel_server/WorldmodelGridMapperConfig.h>
+#include <dynamic_reconfigure/server.h>
 
 //#include <flor_utilities/file_utils.h>
 
@@ -155,14 +157,28 @@ namespace vigir_worldmodel{
       //debug_target_pose_pose_pub_ = m_nh.advertise<geometry_msgs::PoseStamped>("debug_action_pose", 1, false);
 
       //target_pose_action_server_->start();
-
+        // SETUP DYNAMIC RECONFIGURE
+        config_server_.setCallback([this](auto &&PH1, auto &&PH2) {
+            configCallback(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
+        });
     }
 
 
     ~WorldmodelCommunication()
     {}
 
-    void execute_locomotion_target_provider(boost::shared_ptr<actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction> >& as)
+      void configCallback(const vigir_worldmodel_server::WorldmodelGridMapperConfig &config, uint32_t level){
+        log_odds_threshold = config.logg_odds_threshold;
+          upper_map_z_min_ = config.upper_map_z_min;
+          upper_map_z_max_ = config.upper_map_z_max;
+          lower_map_z_max_ = config.lower_map_z_max;
+          lower_map_z_min_ = config.lower_map_z_min;
+          ROS_INFO("Updated dynamic reconfigure");
+      }
+
+
+
+      void execute_locomotion_target_provider(boost::shared_ptr<actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction> >& as)
     {
       // Do lots of awesome groundbreaking robot stuff here
       //as->setSucceeded();
@@ -688,7 +704,7 @@ namespace vigir_worldmodel{
       if (occupancy_grid_pub_.getNumSubscribers() > 0){
         nav_msgs::OccupancyGrid map;
 
-        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + 0.4, lowest_foot_height + 1.0)){
+        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + 0.4, lowest_foot_height + 1.0,std::numeric_limits<double>::quiet_NaN())){
           occupancy_grid_pub_.publish (map);
         }
       }
@@ -696,7 +712,7 @@ namespace vigir_worldmodel{
       if (upper_body_level_occupancy_grid_pub_.getNumSubscribers() > 0){
         nav_msgs::OccupancyGrid map;
 
-        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + 0.7, lowest_foot_height + 1.5)){
+        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + upper_map_z_min_, lowest_foot_height + upper_map_z_max_, log_odds_threshold)){
           upper_body_level_occupancy_grid_pub_.publish (map);
         }
       }
@@ -704,7 +720,7 @@ namespace vigir_worldmodel{
       if (leg_level_occupancy_grid_pub_.getNumSubscribers() > 0){
         nav_msgs::OccupancyGrid map;
 
-        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + 0.15, lowest_foot_height + 0.7)){
+        if (octomap_->getOccupancyGridmap(map, lowest_foot_height + lower_map_z_min_, lowest_foot_height + lower_map_z_max_, log_odds_threshold)){
           leg_level_occupancy_grid_pub_.publish (map);
         }
       }
@@ -1116,6 +1132,14 @@ namespace vigir_worldmodel{
     boost::shared_ptr<actionlib::SimpleActionServer<vigir_perception_msgs::GetLocomotionTargetPoseAction> > target_pose_action_server_;
     ros::Publisher debug_target_pose_cloud_pub_;
     ros::Publisher debug_target_pose_pose_pub_;
+
+    dynamic_reconfigure::Server<vigir_worldmodel_server::WorldmodelGridMapperConfig> config_server_;
+
+    double log_odds_threshold = 0;
+    double upper_map_z_min_=0.7;
+    double upper_map_z_max_=1.5;
+    double lower_map_z_max_=0.7;
+    double lower_map_z_min_=0.15;
   };
 
 }

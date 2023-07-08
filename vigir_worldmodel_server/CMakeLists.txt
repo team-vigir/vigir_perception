@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(vigir_worldmodel_server)
 
-find_package(catkin REQUIRED octomap_msgs octomap_ros pcl_ros vigir_perception_msgs hector_nav_msgs hector_std_msgs)
+find_package(catkin REQUIRED octomap_msgs octomap_ros pcl_ros vigir_perception_msgs hector_nav_msgs hector_std_msgs dynamic_reconfigure)
+generate_dynamic_reconfigure_options(cfg/WorldmodelGridMapper.cfg)
 link_libraries(${OCTOMAP_LIBRARIES})
 find_package(PCL REQUIRED)
 include_directories(
@@ -28,7 +29,7 @@ catkin_package(
 #common commands for building c++ executables and libraries
 add_executable(worldmodel_server_node src/worldmodel_server_node.cpp ${HEADER_FILES})
 target_link_libraries(worldmodel_server_node ${catkin_LIBRARIES})
-add_dependencies(worldmodel_server_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(worldmodel_server_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 # Support for versions less than pp17
 target_link_libraries(worldmodel_server_node stdc++fs)
