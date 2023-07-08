@@ -55,9 +55,11 @@ class StabRepublisher : public StateRepublisherInterface
 {
 public:
   StabRepublisher(const boost::shared_ptr<tf::TransformListener>& tf_listener,
+                    const std::string& reference_frame_name,
                     const std::string& base_frame_name,
                     const std::string& stabilized_frame_name)
     : tf_listener_(tf_listener)
+    , p_reference_frame_name_(reference_frame_name)
     , p_base_frame_name_(base_frame_name)
     , p_stabilized_frame_name_(stabilized_frame_name)
   {
@@ -86,8 +88,8 @@ public:
         tf::StampedTransform robot_world_transform;
 
         try{
-            tf_listener_->waitForTransform("/odom", p_base_frame_name_, time, ros::Duration(0.5));
-            tf_listener_->lookupTransform("/odom", p_base_frame_name_, time, robot_world_transform);
+            tf_listener_->waitForTransform(p_reference_frame_name_, p_base_frame_name_, time, ros::Duration(0.5));
+            tf_listener_->lookupTransform(p_reference_frame_name_, p_base_frame_name_, time, robot_world_transform);
         }catch(tf::TransformException& ex){
             ROS_WARN_STREAM_THROTTLE(5.0, "Transform in stab publisher failed " << ex.what() << " This message is throttled.");
             return;
@@ -152,6 +154,7 @@ public:
   boost::shared_ptr<tf::TransformListener> tf_listener_;
 
   //parameters
+  std::string p_reference_frame_name_;
   std::string p_base_frame_name_;
   std::string p_stabilized_frame_name_;
 

@@ -85,6 +85,9 @@ namespace vigir_worldmodel{
       pnh_in.param("filtered_cloud_buffer_size_mb", p_filtered_cloud_buffer_size_mb, 100);
       pnh_in.param("unfiltered_cloud_buffer_size_mb", p_unfiltered_cloud_buffer_size_mb, 50);
       pnh_in.param("stereo_cloud_buffer_size_mb", p_stereo_cloud_buffer_size_mb, 50);
+      pnh_in.param("stabilized_reference_frame_name", p_stabilized_reference_frame_name, std::string("odom"));
+      pnh_in.param("stabilized_frame_name", p_stabilized_frame_name, std::string("base_stabilized"));
+      pnh_in.param("base_frame_name", p_base_frame_name, std::string("base_link"));
 
 
       //waitForTf(pnh_in);
@@ -128,13 +131,14 @@ namespace vigir_worldmodel{
                                                                                             tf_listener_,
                                                                                             "/robot_pose",
                                                                                             "world",
-                                                                                            "base_link"
+                                                                                            p_base_frame_name
                                                                                             )));
 
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new StabRepublisher(
                                                                                             tf_listener_,
-                                                                                            "base_link",
-                                                                                            "base_stabilized")));
+                                                                                            p_stabilized_reference_frame_name,
+                                                                                            p_base_frame_name,
+                                                                                            p_stabilized_frame_name)));
        /*
         state_provider_->addStateRepublisher(boost::shared_ptr<StateRepublisherInterface>(new TfPoseRepublisher(
                                                                                             tf_listener_,
@@ -289,6 +293,10 @@ namespace vigir_worldmodel{
     int p_filtered_cloud_buffer_size_mb;
     int p_unfiltered_cloud_buffer_size_mb;
     int p_stereo_cloud_buffer_size_mb;
+
+    std::string p_stabilized_frame_name;
+    std::string p_stabilized_reference_frame_name;
+    std::string p_base_frame_name;
 
     std::vector<std::string> required_frames_list_;
     bool p_use_external_octomap_;
