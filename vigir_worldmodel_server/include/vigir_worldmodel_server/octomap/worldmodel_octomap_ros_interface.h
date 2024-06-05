@@ -31,42 +31,38 @@
 
 #include <octomap_msgs/Octomap.h>
 
+namespace vigir_worldmodel
+{
+class WorldmodelOctomapRosInterface
+{
+public:
+  // typedef octomap_msgs::BoundingBoxQuery BBXSrv;
 
-namespace vigir_worldmodel{
+  WorldmodelOctomapRosInterface(ros::NodeHandle& nh)
+  {
+    m_octomapBinaryService = m_nh.advertiseService("octomap_binary", &OctomapServer::octomapBinarySrv, this);
+    m_octomapFullService = m_nh.advertiseService("octomap_full", &OctomapServer::octomapFullSrv, this);
 
-  class WorldmodelOctomapRosInterface{
-  public:
-    //typedef octomap_msgs::BoundingBoxQuery BBXSrv;
+    // m_markerPub = m_nh.advertise<visualization_msgs::MarkerArray>("occupied_cells_vis_array", 1, m_latchedTopics);
+    // m_binaryMapPub = m_nh.advertise<Octomap>("octomap_binary", 1, m_latchedTopics);
+  }
 
-    WorldmodelOctomapRosInterface(ros::NodeHandle& nh)
-    {
-      m_octomapBinaryService = m_nh.advertiseService("octomap_binary", &OctomapServer::octomapBinarySrv, this);
-      m_octomapFullService = m_nh.advertiseService("octomap_full", &OctomapServer::octomapFullSrv, this);
+  bool OctomapServer::octomapBinarySrv(OctomapSrv::Request& req, OctomapSrv::Response& res)
+  {
+    ROS_INFO("Sending binary map data on service request");
+    res.map.header.frame_id = m_worldFrameId;
+    res.map.header.stamp = ros::Time::now();
+    if (!octomap_msgs::binaryMapToMsg(*m_octree, res.map))
+      return false;
 
-      //m_markerPub = m_nh.advertise<visualization_msgs::MarkerArray>("occupied_cells_vis_array", 1, m_latchedTopics);
-     // m_binaryMapPub = m_nh.advertise<Octomap>("octomap_binary", 1, m_latchedTopics);
-    }
+    return true;
+  }
 
-    bool OctomapServer::octomapBinarySrv(OctomapSrv::Request  &req,
-                                        OctomapSrv::Response &res)
-    {
-      ROS_INFO("Sending binary map data on service request");
-      res.map.header.frame_id = m_worldFrameId;
-      res.map.header.stamp = ros::Time::now();
-      if (!octomap_msgs::binaryMapToMsg(*m_octree, res.map))
-        return false;
+protected:
+  ros::ServiceServer m_octomapBinaryService;
+  ros::ServiceServer m_octomapFullService;
+};
 
-      return true;
-    }
-
-  protected:
-
-
-    ros::ServiceServer m_octomapBinaryService;
-    ros::ServiceServer m_octomapFullService;
-
-  };
-
-}
+}  // namespace vigir_worldmodel
 
 #endif

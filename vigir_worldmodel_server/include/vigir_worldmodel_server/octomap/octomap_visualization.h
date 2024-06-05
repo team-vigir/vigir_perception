@@ -42,192 +42,201 @@
 
 #include <vigir_worldmodel_server/octomap/octomap_container.h>
 
-namespace vigir_worldmodel{
+namespace vigir_worldmodel
+{
+class OctomapVisualization
+{
+public:
+  OctomapVisualization(ros::NodeHandle& nh)
+  {
+    m_markerPub = nh.advertise<visualization_msgs::MarkerArray>("occupied_cells_vis_array", 1, false);
 
-  class OctomapVisualization{
-  public:
+    m_colorFactor = 0.8;
 
-    OctomapVisualization(ros::NodeHandle& nh)
+    m_color.r = 0;
+    m_color.g = 0;
+    m_color.b = 1;
+    m_color.a = 1;
+  }
+
+  ~OctomapVisualization()
+  {
+  }
+
+  std_msgs::ColorRGBA heightMapColor(double h)
+  {
+    std_msgs::ColorRGBA color;
+    color.a = 1.0;
+    // blend over HSV-values (more colors)
+
+    double s = 1.0;
+    double v = 1.0;
+
+    h -= floor(h);
+    h *= 6;
+    int i;
+    double m, n, f;
+
+    i = floor(h);
+    f = h - i;
+    if (!(i & 1))
+      f = 1 - f;  // if i is even
+    m = v * (1 - s);
+    n = v * (1 - s * f);
+
+    switch (i)
     {
-      m_markerPub = nh.advertise<visualization_msgs::MarkerArray>("occupied_cells_vis_array", 1, false);
-
-      m_colorFactor = 0.8;
-
-      m_color.r = 0;
-      m_color.g = 0;
-      m_color.b = 1;
-      m_color.a = 1;
+      case 6:
+      case 0:
+        color.r = v;
+        color.g = n;
+        color.b = m;
+        break;
+      case 1:
+        color.r = n;
+        color.g = v;
+        color.b = m;
+        break;
+      case 2:
+        color.r = m;
+        color.g = v;
+        color.b = n;
+        break;
+      case 3:
+        color.r = m;
+        color.g = n;
+        color.b = v;
+        break;
+      case 4:
+        color.r = n;
+        color.g = m;
+        color.b = v;
+        break;
+      case 5:
+        color.r = v;
+        color.g = m;
+        color.b = n;
+        break;
+      default:
+        color.r = 1;
+        color.g = 0.5;
+        color.b = 0.5;
+        break;
     }
 
+    return color;
+  }
 
-    ~OctomapVisualization()
+  void publishVis(const OctomapContainer& map)
+  {
+    // Nothing to do if no one's interested in visualization
+    if (m_markerPub.getNumSubscribers() == 0)
     {
-
+      return;
     }
 
-    std_msgs::ColorRGBA heightMapColor(double h) {
+    const octomap::OcTree* m_octree = map.getOcTree();
 
-      std_msgs::ColorRGBA color;
-      color.a = 1.0;
-      // blend over HSV-values (more colors)
+    // init markers:
+    visualization_msgs::MarkerArray occupiedNodesVis;
+    // each array stores all cubes of a different size, one for each depth level:
+    occupiedNodesVis.markers.resize(map.getMaxTreeDepth() + 1);
 
-      double s = 1.0;
-      double v = 1.0;
+    unsigned m_maxTreeDepth = map.getMaxTreeDepth();
 
-      h -= floor(h);
-      h *= 6;
-      int i;
-      double m, n, f;
+    double minX, minY, minZ, maxX, maxY, maxZ;
+    m_octree->getMetricMin(minX, minY, minZ);
+    m_octree->getMetricMax(maxX, maxY, maxZ);
 
-      i = floor(h);
-      f = h - i;
-      if (!(i & 1))
-        f = 1 - f; // if i is even
-      m = v * (1 - s);
-      n = v * (1 - s * f);
-
-      switch (i) {
-        case 6:
-        case 0:
-          color.r = v; color.g = n; color.b = m;
-          break;
-        case 1:
-          color.r = n; color.g = v; color.b = m;
-          break;
-        case 2:
-          color.r = m; color.g = v; color.b = n;
-          break;
-        case 3:
-          color.r = m; color.g = n; color.b = v;
-          break;
-        case 4:
-          color.r = n; color.g = m; color.b = v;
-          break;
-        case 5:
-          color.r = v; color.g = m; color.b = n;
-          break;
-        default:
-          color.r = 1; color.g = 0.5; color.b = 0.5;
-          break;
-      }
-
-      return color;
-    }
-
-    void publishVis(const OctomapContainer& map)
+    // now, traverse all leafs in the tree:
+    for (octomap::OcTree::iterator it = m_octree->begin(m_maxTreeDepth), end = m_octree->end(); it != end; ++it)
     {
-      //Nothing to do if no one's interested in visualization
-      if (m_markerPub.getNumSubscribers() == 0){
-        return;
-      }
+      // bool inUpdateBBX = isInUpdateBBX(it.getKey());
 
-      const octomap::OcTree* m_octree = map.getOcTree();
+      // call general hook:
+      // handleNode(it);
+      // if (inUpdateBBX)
+      //  handleNodeInBBX(it);
 
-      // init markers:
-      visualization_msgs::MarkerArray occupiedNodesVis;
-      // each array stores all cubes of a different size, one for each depth level:
-      occupiedNodesVis.markers.resize(map.getMaxTreeDepth()+1);
-
-      unsigned m_maxTreeDepth = map.getMaxTreeDepth();
-
-      double minX, minY, minZ, maxX, maxY, maxZ;
-      m_octree->getMetricMin(minX, minY, minZ);
-      m_octree->getMetricMax(maxX, maxY, maxZ);
-
-      // now, traverse all leafs in the tree:
-      for (octomap::OcTree::iterator it = m_octree->begin(m_maxTreeDepth),
-      end = m_octree->end(); it != end; ++it)
+      if (m_octree->isNodeOccupied(*it))
       {
-        //bool inUpdateBBX = isInUpdateBBX(it.getKey());
+        double z = it.getZ();
+        // if (z > m_occupancyMinZ && z < m_occupancyMaxZ)
+        {
+          // double size = it.getSize();
+          double x = it.getX();
+          double y = it.getY();
 
-        // call general hook:
-        //handleNode(it);
-        //if (inUpdateBBX)
-        //  handleNodeInBBX(it);
+          // Ignore speckles in the map:
+          /*
+          if (m_filterSpeckles && (it.getDepth() == m_treeDepth +1) && isSpeckleNode(it.getKey())){
+            ROS_DEBUG("Ignoring single speckle at (%f,%f,%f)", x, y, z);
+            continue;
+          } // else: current octree node is no speckle, send it out
+          */
+          // handleOccupiedNode(it);
+          // if (inUpdateBBX)
+          //  handleOccupiedNodeInBBX(it);
 
-        if (m_octree->isNodeOccupied(*it)){
-          double z = it.getZ();
-          //if (z > m_occupancyMinZ && z < m_occupancyMaxZ)
+          // create marker:
+          // if (publishMarkerArray){
           {
-            //double size = it.getSize();
-            double x = it.getX();
-            double y = it.getY();
+            unsigned idx = it.getDepth();
+            assert(idx < occupiedNodesVis.markers.size());
 
-            // Ignore speckles in the map:
-            /*
-            if (m_filterSpeckles && (it.getDepth() == m_treeDepth +1) && isSpeckleNode(it.getKey())){
-              ROS_DEBUG("Ignoring single speckle at (%f,%f,%f)", x, y, z);
-              continue;
-            } // else: current octree node is no speckle, send it out
-            */
-            //handleOccupiedNode(it);
-            //if (inUpdateBBX)
-            //  handleOccupiedNodeInBBX(it);
+            geometry_msgs::Point cubeCenter;
+            cubeCenter.x = x;
+            cubeCenter.y = y;
+            cubeCenter.z = z;
 
-
-
-            //create marker:
-            //if (publishMarkerArray){
+            occupiedNodesVis.markers[idx].points.push_back(cubeCenter);
+            // if (m_useHeightMap){
             {
-              unsigned idx = it.getDepth();
-              assert(idx < occupiedNodesVis.markers.size());
-
-              geometry_msgs::Point cubeCenter;
-              cubeCenter.x = x;
-              cubeCenter.y = y;
-              cubeCenter.z = z;
-
-              occupiedNodesVis.markers[idx].points.push_back(cubeCenter);
-              //if (m_useHeightMap){
-              {
-
-
-                double h = (1.0 - std::min(std::max((cubeCenter.z-minZ)/ (maxZ - minZ), 0.0), 1.0)) *m_colorFactor;
-                occupiedNodesVis.markers[idx].colors.push_back(heightMapColor(h));
-              }
+              double h = (1.0 - std::min(std::max((cubeCenter.z - minZ) / (maxZ - minZ), 0.0), 1.0)) * m_colorFactor;
+              occupiedNodesVis.markers[idx].colors.push_back(heightMapColor(h));
             }
-
           }
         }
       }
-      for (unsigned i= 0; i < occupiedNodesVis.markers.size(); ++i){
-        double size = m_octree->getNodeSize(i);
-
-        occupiedNodesVis.markers[i].header.frame_id = "world";
-        occupiedNodesVis.markers[i].header.stamp = ros::Time::now();
-        occupiedNodesVis.markers[i].ns = "map";
-        occupiedNodesVis.markers[i].id = i;
-        occupiedNodesVis.markers[i].type = visualization_msgs::Marker::CUBE_LIST;
-        occupiedNodesVis.markers[i].scale.x = size;
-        occupiedNodesVis.markers[i].scale.y = size;
-        occupiedNodesVis.markers[i].scale.z = size;
-        occupiedNodesVis.markers[i].color = m_color;
-        occupiedNodesVis.markers[i].frame_locked = true;
-
-        if (occupiedNodesVis.markers[i].points.size() > 0)
-          occupiedNodesVis.markers[i].action = visualization_msgs::Marker::ADD;
-        else
-          occupiedNodesVis.markers[i].action = visualization_msgs::Marker::DELETE;
-      }
-
-      m_markerPub.publish(occupiedNodesVis);
-
     }
 
-    bool hasSubscribers() const { return (m_markerPub.getNumSubscribers() > 0); };
+    for (unsigned i = 0; i < occupiedNodesVis.markers.size(); ++i)
+    {
+      double size = m_octree->getNodeSize(i);
 
+      occupiedNodesVis.markers[i].header.frame_id = "world";
+      occupiedNodesVis.markers[i].header.stamp = ros::Time::now();
+      occupiedNodesVis.markers[i].ns = "map";
+      occupiedNodesVis.markers[i].id = i;
+      occupiedNodesVis.markers[i].type = visualization_msgs::Marker::CUBE_LIST;
+      occupiedNodesVis.markers[i].scale.x = size;
+      occupiedNodesVis.markers[i].scale.y = size;
+      occupiedNodesVis.markers[i].scale.z = size;
+      occupiedNodesVis.markers[i].color = m_color;
+      occupiedNodesVis.markers[i].frame_locked = true;
 
-  protected:
+      if (occupiedNodesVis.markers[i].points.size() > 0)
+        occupiedNodesVis.markers[i].action = visualization_msgs::Marker::ADD;
+      else
+        occupiedNodesVis.markers[i].action = visualization_msgs::Marker::DELETE;
+    }
 
-    ros::Publisher m_markerPub;
+    m_markerPub.publish(occupiedNodesVis);
+  }
 
-    double m_colorFactor;
-    std_msgs::ColorRGBA m_color;
-
-    //OctomapContainer map;
-
+  bool hasSubscribers() const
+  {
+    return (m_markerPub.getNumSubscribers() > 0);
   };
 
-}
+protected:
+  ros::Publisher m_markerPub;
+
+  double m_colorFactor;
+  std_msgs::ColorRGBA m_color;
+
+  // OctomapContainer map;
+};
+}  // namespace vigir_worldmodel
 
 #endif
