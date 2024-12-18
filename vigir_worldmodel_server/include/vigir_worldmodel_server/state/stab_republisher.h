@@ -53,6 +53,8 @@ using namespace std;
 
 class StabRepublisher : public StateRepublisherInterface
 {
+private:
+  ros::Time last_stamp_;
 public:
   StabRepublisher(const boost::shared_ptr<tf::TransformListener>& tf_listener,
                     const std::string& base_frame_name,
@@ -90,6 +92,13 @@ public:
         }catch(tf::TransformException& ex){
             ROS_WARN_STREAM_THROTTLE(5.0, "Transform in stab publisher failed " << ex.what() << " This message is throttled.");
             return;
+        }
+
+        if (robot_world_transform.stamp_ == last_stamp_) {
+          return;
+        }
+        else {
+          last_stamp_ = robot_world_transform.stamp_;
         }
 
         double roll, pitch, yaw;
