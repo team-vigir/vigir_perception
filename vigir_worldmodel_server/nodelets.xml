@@ -1,0 +1,11 @@
+<library path="lib/libvigir_worldmodel_server">
+
+  <class name="vigir_worldmodel/worldmodel_server_nodelet"
+	 type="vigir_worldmodel::WorldmodelNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      Provides nodelet version of vigir_worldmodel_server
+    </description>
+  </class>
+
+</library>

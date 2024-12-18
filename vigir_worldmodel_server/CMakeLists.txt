@@ -28,12 +28,16 @@ catkin_package(
     CATKIN_DEPENDS roscpp std_msgs octomap_msgs octomap_ros pcl_ros vigir_perception_msgs hector_nav_msgs
 )
 
+add_library(vigir_worldmodel_server src/worldmodel_server_nodelet.cpp ${HEADER_FILES})
+target_link_libraries(vigir_worldmodel_server ${catkin_LIBRARIES})
+add_dependencies(vigir_worldmodel_server ${catkin_EXPORTED_TARGETS})
+
 #common commands for building c++ executables and libraries
-add_executable(worldmodel_server_node src/worldmodel_server_node.cpp ${HEADER_FILES})
-target_link_libraries(worldmodel_server_node ${catkin_LIBRARIES})
+add_executable(worldmodel_server_node src/worldmodel_server_node.cpp)
+target_link_libraries(worldmodel_server_node ${catkin_LIBRARIES} vigir_worldmodel_server)
 add_dependencies(worldmodel_server_node ${catkin_EXPORTED_TARGETS})
 
-install(TARGETS worldmodel_server_node
+install(TARGETS worldmodel_server_node vigir_worldmodel_server
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
@@ -42,4 +46,9 @@ install(TARGETS worldmodel_server_node
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   FILES_MATCHING PATTERN "*.launch"
+)
+
+install(FILES
+  nodelets.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
