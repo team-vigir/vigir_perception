@@ -343,7 +343,7 @@ public:
 
       // pcl::PointCloud<ScanPointT> pc;
 
-      boost::shared_ptr<pcl::PointCloud<ScanPointT> > pc(new pcl::PointCloud<ScanPointT>());
+      pcl::shared_ptr<pcl::PointCloud<ScanPointT> > pc(new pcl::PointCloud<ScanPointT>());
       tf::Point origin(0, 0, 0);
 
       for (; index >= 0; --index)
@@ -412,7 +412,7 @@ public:
       {
         int index = target_size - 1;
 
-        boost::shared_ptr<pcl::PointCloud<ScanPointT> > pc(new pcl::PointCloud<ScanPointT>());
+        pcl::shared_ptr<pcl::PointCloud<ScanPointT> > pc(new pcl::PointCloud<ScanPointT>());
         tf::Point origin(0, 0, 0);
 
         for (; index >= 0; --index)
@@ -715,7 +715,7 @@ public:
       {
         int index = target_size - 1;
 
-        boost::shared_ptr<pcl::PointCloud<ScanPointT> > pc(new pcl::PointCloud<ScanPointT>());
+        pcl::shared_ptr<pcl::PointCloud<ScanPointT> > pc(new pcl::PointCloud<ScanPointT>());
         tf::Point origin(0, 0, 0);
 
         for (; index >= 0; --index)
