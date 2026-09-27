@@ -84,7 +84,7 @@ namespace vigir_worldmodel{
     , allow_duplicate_stamps_(allow_duplicate_stamps)
     {
       //Need to add a proper pointcloud to stamp comparison object
-      boost::shared_ptr<pcl::PointCloud<PointT> > pc (new pcl::PointCloud<PointT>());
+      pcl::shared_ptr<pcl::PointCloud<PointT> > pc (new pcl::PointCloud<PointT>());
       std::vector<tf::StampedTransform> tmp;
       //tmp_comparison_container_ = PointCloudContainer<PointT>(pc, tmp);
 
@@ -114,7 +114,7 @@ namespace vigir_worldmodel{
       pointclouds_.clear();
     }
 
-    void addCloud(boost::shared_ptr<pcl::PointCloud<PointT> > cloud)
+    void addCloud(pcl::shared_ptr<pcl::PointCloud<PointT> > cloud)
     {
       ros::Time cloud_stamp = pcl_conversions::fromPCL(cloud->header.stamp);
 
@@ -168,7 +168,7 @@ namespace vigir_worldmodel{
       //}
     }
 
-    bool getAggregateCloud(boost::shared_ptr<pcl::PointCloud<PointT> > cloud, const std::string& frame_id, const std::string& aggregation_frame_id = std::string(""), size_t aggregation_size= 500)
+    bool getAggregateCloud(pcl::shared_ptr<pcl::PointCloud<PointT> > cloud, const std::string& frame_id, const std::string& aggregation_frame_id = std::string(""), size_t aggregation_size= 500)
     {
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
 
@@ -230,7 +230,7 @@ namespace vigir_worldmodel{
             Eigen::Matrix4f publish_transform_eigen;
             pcl_ros::transformAsMatrix(publish_transform, publish_transform_eigen);
 
-            pcl::PointCloud<pcl::PointXYZI>::Ptr tmp_transformed_cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZI> >();
+            pcl::PointCloud<pcl::PointXYZI>::Ptr tmp_transformed_cloud = pcl::make_shared<pcl::PointCloud<pcl::PointXYZI> >();
 
             pcl::transformPointCloud(*cloud, *tmp_transformed_cloud, publish_transform_eigen);
 
@@ -253,7 +253,7 @@ namespace vigir_worldmodel{
       return true;
     }
 
-    bool getAggregateCloudBbxFiltered(boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, const geometry_msgs::Point& bbx_min, const geometry_msgs::Point& bbx_max, double voxel_grid_size, const std::string& aggregation_frame_id = "", size_t aggregation_size= 500)
+    bool getAggregateCloudBbxFiltered(pcl::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, const geometry_msgs::Point& bbx_min, const geometry_msgs::Point& bbx_max, double voxel_grid_size, const std::string& aggregation_frame_id = "", size_t aggregation_size= 500)
     {
       ROS_DEBUG("bbx_min: %f %f %f",bbx_min.x,bbx_min.y,bbx_min.z);
       ROS_DEBUG("bbx_max: %f %f %f",bbx_max.x,bbx_max.y,bbx_max.z);
@@ -266,7 +266,7 @@ namespace vigir_worldmodel{
 
 
 
-        boost::shared_ptr<pcl::PointCloud<PointT> > cloud_tmp(new pcl::PointCloud<PointT>());
+        pcl::shared_ptr<pcl::PointCloud<PointT> > cloud_tmp(new pcl::PointCloud<PointT>());
         crop_box_filter.filter(*cloud_tmp);
 
 
@@ -275,7 +275,7 @@ namespace vigir_worldmodel{
           vox_grid.setInputCloud (cloud_tmp);
           vox_grid.setLeafSize (voxel_grid_size, voxel_grid_size, voxel_grid_size);
           //vox_grid.filter (*cloud); // Please see this http://www.pcl-developers.org/Possible-problem-in-new-VoxelGrid-implementation-from-PCL-1-5-0-td5490361.html
-          const boost::shared_ptr<pcl::PointCloud<PointT> > tempCloud = boost::make_shared<pcl::PointCloud<PointT> >();
+          const pcl::shared_ptr<pcl::PointCloud<PointT> > tempCloud = pcl::make_shared<pcl::PointCloud<PointT> >();
           vox_grid.filter (*tempCloud);
           cloud = tempCloud;
         }else{
@@ -293,7 +293,7 @@ namespace vigir_worldmodel{
      * Return a single cloud from the stored circular buffer. The index variable 0 indicates the most recent cloud
      * and counts up towards older clouds in the buffer.
      */
-    bool getSingleCloud(const boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, tf::Point* origin = 0 , size_t index = 0)
+    bool getSingleCloud(const pcl::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id, tf::Point* origin = 0 , size_t index = 0)
     {
       boost::mutex::scoped_lock lock(cloud_circular_buffer_mutex_);
       size_t size = pointclouds_.size();
@@ -334,7 +334,7 @@ namespace vigir_worldmodel{
      * Return a single cloud from the stored circular buffer. The index variable 0 indicates the most recent cloud
      * and counts up towards older clouds in the buffer.
      */
-    bool getSingleCloudBbxFiltered(const boost::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id,  const geometry_msgs::Point& bbx_min, const geometry_msgs::Point& bbx_max, tf::Point* origin = 0 , size_t index = 0)
+    bool getSingleCloudBbxFiltered(const pcl::shared_ptr<pcl::PointCloud<PointT> >& cloud, const std::string& frame_id,  const geometry_msgs::Point& bbx_min, const geometry_msgs::Point& bbx_max, tf::Point* origin = 0 , size_t index = 0)
     {
       if (this->getSingleCloud(cloud, frame_id, origin, index)){
 
@@ -503,7 +503,7 @@ namespace vigir_worldmodel{
         ROS_ERROR("Attempting to write pcd to file, but frames list is empty!");
       }
 
-      boost::shared_ptr<pcl::PointCloud<PointT> > cloud = boost::make_shared<pcl::PointCloud<PointT> >();
+      pcl::shared_ptr<pcl::PointCloud<PointT> > cloud = pcl::make_shared<pcl::PointCloud<PointT> >();
       this->getAggregateCloud(cloud, frames_list_[0]);
 
       pcl::io::savePCDFile(name, *cloud);

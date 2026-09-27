@@ -45,7 +45,7 @@ namespace vigir_worldmodel{
   class PointCloudContainer
   {
   public:
-    PointCloudContainer(boost::shared_ptr<pcl::PointCloud<PointT> > pc, const std::vector<tf::StampedTransform>& transforms)
+    PointCloudContainer(pcl::shared_ptr<pcl::PointCloud<PointT> > pc, const std::vector<tf::StampedTransform>& transforms)
     : pc(pc)
     , transforms(transforms)
     {}
@@ -67,7 +67,7 @@ namespace vigir_worldmodel{
 
   protected:
     //pcl::PointCloud<PointT> pc;
-    boost::shared_ptr<pcl::PointCloud<PointT> > pc;
+    pcl::shared_ptr<pcl::PointCloud<PointT> > pc;
     std::vector<tf::StampedTransform> transforms;
     //ros::Time stamp;
   };
