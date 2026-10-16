@@ -29,6 +29,8 @@
 #ifndef STATE_PROVIDER_H__
 #define STATE_PROVIDER_H__
 
+#include <atomic>
+
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -41,10 +43,16 @@ namespace vigir_worldmodel{
   {
   public:
     StateProvider()
+      : running_(false)
     {}
 
     ~StateProvider()
-    {}
+    {
+      // Stop the loop before the republishers it calls are destroyed.
+      running_ = false;
+      if (loop_thread_ && loop_thread_->joinable())
+        loop_thread_->join();
+    }
 
     void addStateRepublisher(boost::shared_ptr<StateRepublisherInterface> republisher)
     {
@@ -53,6 +61,7 @@ namespace vigir_worldmodel{
 
     void start(double loop_rate = 30.0)
     {
+      running_ = true;
       loop_thread_.reset(new boost::thread(boost::bind(&StateProvider::loopFunction, this, loop_rate)));
     }
 
@@ -62,7 +71,7 @@ namespace vigir_worldmodel{
 
       ros::Time time = ros::Time(0);
 
-      while(ros::ok())
+      while(running_ && ros::ok())
       {
         size_t size = republishers_.size();
 
@@ -75,6 +84,8 @@ namespace vigir_worldmodel{
     }
 
   protected:
+
+    std::atomic<bool> running_;
 
     boost::shared_ptr<boost::thread> loop_thread_;
 

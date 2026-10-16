@@ -53,7 +53,16 @@ namespace vigir_worldmodel{
     }
 
     ~TransformServiceProvider()
-    {}
+    {
+      // Stop the service thread before the queue and node handle it uses are destroyed.
+      // Left running, it locks the destroyed CallbackQueue's mutex when the nodelet is
+      // unloaded: boost::lock_error, std::terminate, the manager aborts.
+      transform_lookup_service_.shutdown();
+      if (nh_)
+        nh_->shutdown();
+      if (loop_thread_ && loop_thread_->joinable())
+        loop_thread_->join();
+    }
 
     void serviceCallbackQueue()
     {
